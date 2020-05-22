@@ -17,19 +17,22 @@ rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
 ```
 Find multicellular programs:
 ```
-R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "~/Desktop/DIALOGUE.results/")
+R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "DIALOGUE.results/")
 ```
 
 You can also reproduce the colon/IBD multicellular program reported in our paper using the following code 
 ```
 rA<-readRDS(system.file("extdata", "IBD.data.rds", package = "DIALOGUE"))
-R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "~/Desktop/DIALOGUE.results/")
+R<-DIALOGUE.run(rA = rA,main = "IBD",k = 2,results.dir = "DIALOGUE.results/")
 ```
+
+See ```?DIALOGUE::DIALOGUE.run``` for more information.
 
 # General notes
 
-DIALOGUE will identify multicellular progams, such that each program has a cell-type-specific component. It will generate figures to depict the association between the different cell-type-components of each multicellular program.
+DIALOGUE will identify multicellular programs, such that each program will have different cell-type-specific components. It will generate figures to depict the association between the different cell-type-components of each multicellular program.
 
 # Citation
 
 Jerby-Arnon L and Regev _**Mapping multicellular configurations using single-cell data**_.
+
