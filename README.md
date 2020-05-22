@@ -8,14 +8,18 @@ DIALOGUE is a method for mapping multicellular configurations based on single-ce
 * R libraries: lme4, lmerTest, PMA, plyr, matrixStats, psych, stringi, RColorBrewer, unikn, reshape2, ggplot2
 
 # **Quick start**
-To run a toy example, first download
-```rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
-summary(rA)
+
+To install you can either use ```devtools::install_github("DIALOGUE",your_user_name)``` or ```devtools::install("DIALOGUE")```
+
+To run a toy example
+```
+rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
 Find multicellular programs:
 R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "~/Desktop/DIALOGUE.results/")
 ```
 # General notes
 
+DIALOGUE will identify multicellular progams, such that each program has a cell-type-specific component. It will generate figures to depict the association between the different cell-type-components of each multicellular program.
 
 # Citation
 
