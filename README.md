@@ -11,6 +11,10 @@ DIALOGUE is a method for mapping multicellular configurations based on single-ce
 
 To install you can either use ```devtools::install_github("DIALOGUE",your_user_name)``` or ```devtools::install("DIALOGUE")```
 
+The data for testing is provided in the 
+[Single Cell Portal](https://singlecell.broadinstitute.org/single_cell/study/SCP958/dialogue#study-download)
+(make sure to download and uncompress the package to the DIALOGUE directory).
+
 To run a toy example, download the toy example data
 ```
 rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
