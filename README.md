@@ -38,5 +38,5 @@ DIALOGUE will identify multicellular programs, such that each program will have 
 
 # Citation
 
-Jerby-Arnon L and Regev _**Mapping multicellular configurations using single-cell data**_.
+Jerby-Arnon and Regev _**Mapping multicellular configurations using single-cell data**_.
 
