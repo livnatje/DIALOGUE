@@ -1,29 +1,60 @@
 #' DIALOGUE.run
 #'
-#' This function identifies multicellular programs based on single-cell data.
+#' DIALOGUE is a dimensionality reduction approach that uses cross-cell-type
+#' associations to identify multicellular programs and map the cell transcriptome
+#' as a function of its environment. 
+#' 
 #' @param rA list of \linkS4class{cell.type} objects.
+#' @param k the number of multicellular programs to identify;
+#' @param main results' name;
+#' @param results.dir path to the results directory, where the output will be saved;
+#' @param plot.flag if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;
+#' @param add.effects whether to add additional covariates to the multilevel model;
+#' if TRUE then the covariates will extracted from the [conf] slot in the \linkS4class{cell.type} objects;
+#' default is FALSE.
+#' 
 #' @return A list with the following components:
 #' @return sig -  the multicellular programs, given as a list of signatures;
 #' @return scores - the multicellular programs' scores in each cell;
 #' @return gene.pval - the cross-cell-type p-values of each program;
 #' @return pref - the correlation (R) and association (mixed-effects p-value) between the cell-type-sepcific
-#' components of each multicellular programs
-#' @seealso See the \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for instructions \code{\link[matrixStats]{colMedians}}
+#' components of each multicellular programs.
+#' @example 
+#' To run a toy example, first download
+#' rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
+#' summary(rA)
+#' Length Class     Mode
+#' TA2         1      cell.type S4  
+#' Macrophages 1      cell.type S4
+#' CD8         1      cell.type S4
+#' Find multicellular programs:
+#' R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "~/Desktop/DIALOGUE.results/")
+#' 
+#' To regenerate the IBD results provided in our manuscript:
+#' rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
+#' R<-DIALOGUE.run(rA = rA,main = "IBD",k = 5,results.dir = "~/Desktop/DIALOGUE.results/")
+#' 
+#' @seealso See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
 #' \code{\link{DIALOGUE.plot}}
 #' @author Livnat Jerby-Arnon
+#' @references 
+#' Jerby-Arnon and Regev, Mapping multicellular configurations using single-cell data
 #' @export
-DIALOGUE.run<-function(rA,k2 = 2,results.dir = "~/Desktop/DIALOGUE.results/",
-                       plot.flag = T,full.version = F){
-  R<-DIALOGUE1(rA,k2 = k2,results.dir = results.dir)
-  R<-DIALOGUE2(rA = rA,results.dir = results.dir)
-  R<-DIALOGUE3(rA = rA,results.dir = results.dir,full.version = full.version)
+#' 
+DIALOGUE.run<-function(rA,main,k = 2,
+                       results.dir = "~/Desktop/DIALOGUE.results/",
+                       plot.flag = T,add.effects = F){
+  full.version <- F
+  R<-DIALOGUE1(rA,k = k,main = main,results.dir = results.dir)
+  R<-DIALOGUE2(rA = rA,main = main,results.dir = results.dir,add.effects = add.effects)
+  R<-DIALOGUE3(rA = rA,main = main,results.dir = results.dir,full.version = full.version)
   if(plot.flag){
     DIALOGUE.plot(R,results.dir = results.dir)
   }
   return(R)
 }
 
-DIALOGUE1<-function(rA,k2 = 5,results.dir = "~/Desktop/DIALOGUE.results/"){
+DIALOGUE1<-function(rA,k2 = 5,main,results.dir = "~/Desktop/DIALOGUE.results/"){
   print("#************DIALOGUE Step I: Canonical Correlation Analysis (CCA)************#")
   X<-lapply(rA, function(r){
     X1<-average.mat.rows(r@X,r@samples,f = colMedians)
@@ -50,7 +81,7 @@ DIALOGUE1<-function(rA,k2 = 5,results.dir = "~/Desktop/DIALOGUE.results/"){
   perm.out <- MultiCCA.permute(X,type=rep("standard",length(X)),trace = F)
   out <- MultiCCA(X, type=rep("standard",length(X)),
                   penalty=perm.out$bestpenalties,niter = 100,
-                  ncomponents=k2, ws=perm.out$ws.init,trace = F)
+                  ncomponents=k, ws=perm.out$ws.init,trace = F)
   names(out$ws)<-names(X)
   for(i in names(X)){
     colnames(out$ws[[i]])<-paste0("C",1:ncol(out$ws[[i]]))
@@ -62,19 +93,25 @@ DIALOGUE1<-function(rA,k2 = 5,results.dir = "~/Desktop/DIALOGUE.results/"){
   cca.cor<-apply(pairs1,1,function(x) diag(cor(Y[[x[1]]],Y[[x[2]]])))
   colnames(cca.cor)<-paste(pairs1[,1],pairs1[,2],sep = "_")
   y<-list()
-  main<-paste0(names(out$ws),collapse = "_")
+  if(missing(main)){
+    main<-paste0(names(out$ws),collapse = "_")
+  }
+  
   R<-list(name = paste0("DIALOGUE1_",main),
-          cell.types = cell.types,k = c(k2,laply(X,length)),
+          cell.types = cell.types,k = c(k,laply(X,ncol)),
           samples = samplesU,sample.PCs = X,
           cca = out,cca.cor = cca.cor,
           cca.scores = list(),cca.gene.cor = list(),
           cca.sig = list(),cca.redun.cor = list())
+  names(R$k)<-c("DIALOGUE",paste0("original.",cell.types))
 
   for(x in cell.types){
     r<-rA[[x]]
     y[[x]]<-r@X[,1:k1]%*%out$ws[[x]]
     scores0<-as.matrix(y[[x]])
-    r@scores<-t(get.residuals(t(scores0),r@cellQ))
+    conf<-r@cellQ
+    if(!is.null(r@conf)){conf<-cbind.data.frame(r@cellQ,r@conf)}
+    r@scores<-t(get.residuals(t(scores0),conf))
     r@scoresAv<-average.mat.rows(r@scores,r@samples,f = colMedians)
     R$cca.scores[[x]]<-r@scores
     R$cca.gene.cor[[x]]<-cor(t(r@tpm),r@scores)
@@ -87,14 +124,14 @@ DIALOGUE1<-function(rA,k2 = 5,results.dir = "~/Desktop/DIALOGUE.results/"){
   return(R)
 }
 
-DIALOGUE2<-function(rA,results.dir = "~/Desktop/DIALOGUE.results/"){
+DIALOGUE2<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",add.effects = T){
   cell.types<-names(rA)
-  main<-paste0(cell.types,collapse = "_")
+  if(missing(main)){main<-paste0(cell.types,collapse = "_")}
   file1<-paste0(results.dir,"/DIALOGUE1_",main,".rds")
   file2<-paste0(results.dir,"/DIALOGUE2_",main,".rds")
 
   R<-readRDS(file1)
-  if(!is.null(rA[[1]]@conf)){
+  if(add.effects & !is.null(rA[[1]]@conf)){
     R$frm<-paste("y ~ (1 | samples) + x + cellQ +",
                  paste(colnames(rA[[1]]@conf),collapse = " +"))
   }else{
@@ -180,10 +217,10 @@ DIALOGUE2.mixed.effects<-function(r1,x,sig2,frm = "y ~ (1 | samples) + x + cellQ
   return(P)
 }
 
-DIALOGUE3<-function(rA,results.dir = "~/Desktop/DIALOGUE.results/",full.version = F){
+DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.version = F){
   print("#************DIALOGUE Step III: Finalizing the scores************#")
   cell.types<-names(rA)
-  main<-paste0(cell.types,collapse = "_")
+  if(missing(main)){main<-paste0(cell.types,collapse = "_")}
   R<-readRDS(paste0(results.dir,"/DIALOGUE2_",main,".rds"))
   R$gene.pval<-lapply(R$cell.types, function(x) DLG.multi.get.gene.pval(x,R))
   names(R$gene.pval)<-R$cell.types
@@ -300,10 +337,12 @@ DLG.find.scoring<-function(r1,R){
   }
   m<-lapply(colnames(r1@extra.scores$cca0), f)
   # r1@scores0<-t(laply(m,function(x) x$scores))
+  conf<-r1@cellQ
+  if(!is.null(r1@conf)){conf<-cbind.data.frame(r1@cellQ,r1@conf)}
   r1@extra.scores$nnl0<-t(laply(m,function(x) x$scores))
   colnames(r1@extra.scores$nnl0)<-colnames(r1@extra.scores$cca0)
-  r1@extra.scores$cca<-t(get.residuals(t(r1@extra.scores$cca0),r1@cellQ))
-  r1@scores<-t(get.residuals(t(r1@extra.scores$nnl0),r1@cellQ))
+  r1@extra.scores$cca<-t(get.residuals(t(r1@extra.scores$cca0),conf))
+  r1@scores<-t(get.residuals(t(r1@extra.scores$nnl0),conf))
   r1@scoresAv<-average.mat.rows(r1@scores,r1@samples)
   r1@gene.pval<-NULL
   for(x in m){

@@ -150,7 +150,7 @@ set.field<-function (v,b){
   d <- dim(v)
   d.b<-length(b)
   if(!is.null(d)){
-    if(d[1]==d.b){v <- v[b,]}
+    if(d[1]==d.b){v <- subset(v,subset = b)}
     if(d[2]==d.b){v <- v[,b]}
   }else{if(length(v)==d.b){v <- v[b]}}
   return(v)

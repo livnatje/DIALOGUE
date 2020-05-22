@@ -1,11 +1,16 @@
-#' An S4 class to represent a cell type.
-#' A representation of a specific type of cells
-#' @slot name cell-type name
-#' @slot cells cell identifiers (1xn)
-#' @slot genes (1xm)
+#' DIALOGUE cell.type S4 class
+#' @description An S4 class that represents a subset of cells (for example, a particular cell type).
+#' 
+#' @slot name cell type name;
+#' @slot cells cell identifiers (1xn);
 #' @slot tpm gene expression matrix (mxn)
+#' @slot genes genes (1xm) represented in the [tpm] matrix;
 #' @slot X features matrix (kxn), e.g., PCs, NMF components, tpm etc.
-#' @slot samples (1xn)
+#' These features will be used to identify the multicellular programs.
+#' @slot samples the samples corresponding to the cells in [cells] (1xn)
+#' @seealso See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
+#' \code{\link{DIALOGUE.plot}}
+#' @author Livnat Jerby-Arnon
 cell.type <- setClass(Class = "cell.type",
                       slots = c("name","cells","genes",
                                 "tpm","tpmAv","zscores",
@@ -18,10 +23,10 @@ cell.type <- setClass(Class = "cell.type",
 
 #' make.cell.type
 #'
-#' This function generates a cell.type object for DIALOGUE.
+#' This function generates a \linkS4class{cell.type} object for DIALOGUE.
 #' @param name cell type name
 #' @param tpm gene expression or any type of single-cell profiling (mxn)
-#' @param X features matrix (kxn), e.g., PCs, NMF components, tpm etc.
+#' @param X features matrix (kxn), e.g., PCs, NMF components, tpm etc.; these features will be used to identify the multicellular programs.
 #' @param samples the sample of each cell (1xn)
 #' @param cellQ cell quality measures, e.g., number of reads/genes detected (1xn)
 #' @export
@@ -30,7 +35,7 @@ cell.type <- setClass(Class = "cell.type",
 #' cellQ = colSumes(tpm>0),X = PCs)
 #' @field cell.type a representation of a specific type of cells
 
-make.cell.type<-function(name,tpm,samples,cellQ,X = NULL,
+make.cell.type<-function(name,tpm,samples,cellQ,X = NULL,conf = NULL,
                          tpmAv = t(average.mat.rows(t(tpm),samples))){
   r<-cell.type(name = name,
                cells = colnames(tpm),
@@ -40,6 +45,7 @@ make.cell.type<-function(name,tpm,samples,cellQ,X = NULL,
                X = X,
                samples = samples,
                cellQ = cellQ,
+               conf = conf,
                extra.scores = list())
   return(r)
 }

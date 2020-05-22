@@ -78,7 +78,7 @@ DIALOGUE.plot.sig.comp<-function(sig,main = ""){
   b<-stri_count(str = rownames(m1),regex = "&")>1
   m2<-rbind(m1[!b,],colSums(m1[b,]))
   rownames(m2)[nrow(m2)]<-"> 2 cell types"
-  if(all(m2["> 2 cell types",]==0)){m2<-m2[1:(ncol(m2)-1),]}
+  if(all(m2["> 2 cell types",]==0)){m2<-m2[1:(nrow(m2)-1),]}
   m1<-melt(m2)
   colnames(m1)<-c("col","x","y")
   p<-ggplot(data=m1, aes(x=x, y=y, fill=col))+geom_bar(stat="identity")+
