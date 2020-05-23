@@ -4,7 +4,7 @@ DIALOGUE is a method for mapping multicellular configurations based on single-ce
 
 # **Requirements**
 
-* R (tested in R version 3.4.0 (2017-04-21) -- "You Stupid Darkness").
+* R (tested in R version 3.4.0).
 * R libraries: lme4, lmerTest, PMA, plyr, matrixStats, psych, stringi, RColorBrewer, unikn, reshape2, ggplot2
 
 # **Quick start**
