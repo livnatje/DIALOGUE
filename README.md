@@ -23,7 +23,7 @@ Find multicellular programs:
 ```
 R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "DIALOGUE.results/")
 ```
-k denotes the number of multicellualr programs (MCPs) that will be identified. The different MCPs are not correlated with one another, and the cross-cell-type correlations observed within an MCP usually decreases with k, such that the first few MCPs depict most of the multicellular co-expression. DIALOGUE will always find the same MCPs or a subset of them, no matter which k is used.
+``k`` denotes the number of multicellualr programs (MCPs) that will be identified. The different MCPs are not correlated with one another, and the cross-cell-type correlations observed within an MCP usually decreases with k, such that the first few MCPs depict most of the multicellular co-expression. DIALOGUE will always find the same MCPs or a subset of them, no matter which k is used.
 
 
 You can also reproduce the colon/IBD multicellular program reported in our paper using the following code 
