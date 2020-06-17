@@ -1,7 +1,7 @@
 # **Welcome to the DIALOGUE!**
 DIALOGUE is a dimensionality reduction approach that uses cross-cell-type associations to identify multicellular programs and map the cell transcriptome as a function of its environment. Given single-cell data, it combines penalized matrix decomposition with multilevel modeling, to identify generalizable multicellular programs and examines their association with specific phenotypes of interest. By doing so it also robustly recovers spatial information and can characterize the cell environment based only based on its transcriptome.
 
-<img src="Images/DIALOGUEoverview.png" width=400 />
+<img src="Images/DIALOGUEoverview.png" width=600 />
 
 
 # **Requirements**
