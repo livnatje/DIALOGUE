@@ -1,6 +1,6 @@
 # **Welcome to the DIALOGUE!**
 
-DIALOGUE is a method for mapping multicellular configurations based on single-cell data. By combining penalized matrix decomposition with multilevel modeling, DIALOGUE robustly recovers spatial information, characterizes the cell environment only based on its transcriptome, and identifies generalizable multicellular programs/configurations, including those that underly different phenotypes of interest in health and disease.
+DIALOGUE is a dimensionality reduction approach that uses cross-cell-type associations to identify multicellular programs and map the cell transcriptome as a function of its environment. Given single-cell data, it combines penalized matrix decomposition with multilevel modeling, to identify generalizable multicellular programs and examines their association with specific phenotypes of interest. By doing so it also robustly recovers spatial information and can characterizes the cell environment based only based on its transcriptome.
 
 # **Requirements**
 
@@ -23,6 +23,8 @@ Find multicellular programs:
 ```
 R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "DIALOGUE.results/")
 ```
+k denotes the number of multicellualr programs (MCPs) that will be identified. The different MCPs are not correlated with one another, and the cross-cell-type correlations observed within an MCP usually decreases with k, such that the first few MCPs depict most of the multicellular co-expression. DIALOGUE will always find the same MCPs or a subset of them, no matter which k is used.
+
 
 You can also reproduce the colon/IBD multicellular program reported in our paper using the following code 
 ```
