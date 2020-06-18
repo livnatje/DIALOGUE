@@ -1,5 +1,5 @@
 # **Welcome to the DIALOGUE!**
-DIALOGUE is a dimensionality reduction approach that uses cross-cell-type associations to identify multicellular programs and map the cell transcriptome as a function of its environment. Given single-cell data, it combines penalized matrix decomposition with multilevel modeling, to identify generalizable multicellular programs and examines their association with specific phenotypes of interest. By doing so it also robustly recovers spatial information and can characterize the cell environment based only based on its transcriptome.
+DIALOGUE is a dimensionality reduction approach that uses cross-cell-type associations to identify multicellular programs (MCPs) and map the cell transcriptome as a function of its environment. Given single-cell data, it combines penalized matrix decomposition with multilevel modeling, to identify generalizable multicellular programs and examines their association with specific phenotypes of interest. By doing so it also robustly recovers spatial information and can characterize the cell environment only based on its transcriptome.
 
 <img src="Images/DIALOGUEoverview.png" width=600 />
 
@@ -35,9 +35,13 @@ rA<-readRDS(system.file("extdata", "IBD.data.rds", package = "DIALOGUE"))
 R<-DIALOGUE.run(rA = rA,main = "IBD",k = 2,results.dir = "DIALOGUE.results/")
 ```
 
+# Output
+
+It will generate figures to depict the association between the different cell-type-components of each multicellular program.
+
 # General notes
 
-DIALOGUE will identify multicellular programs, such that each program will have different cell-type-specific components. It will generate figures to depict the association between the different cell-type-components of each multicellular program.
+DIALOGUE maps multicellular programs (MCPs). Each MCP is composed of two or more co-regulated cell-type-specific components. 
 
 # Citation
 
