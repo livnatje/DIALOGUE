@@ -1,8 +1,8 @@
 # **Welcome to the DIALOGUE!**
-DIALOGUE is a dimensionality reduction approach that uses cross-cell-type associations to identify multicellular programs (MCPs) and map the cell transcriptome as a function of its environment. Given single-cell data, it combines penalized matrix decomposition with multilevel modeling, to identify generalizable multicellular programs and examines their association with specific phenotypes of interest. By doing so it also robustly recovers spatial information and can characterize the cell environment only based on its transcriptome.
 
-<img src="Images/DIALOGUEoverview.png" width=600 />
+DIALOGUE is a dimensionality reduction method that uses cross-cell-type associations to identify multicellular programs (MCPs) and map the cell transcriptome as a function of its environment. Given single-cell data, it combines penalized matrix decomposition with multilevel modeling to identify generalizable MCPs and examines their association with specific phenotypes of interest.
 
+<img src="https://github.com/livnatje/DIALOGUE/blob/master/Images/DIALOGUEoverview.png" width=400 />
 
 # **Requirements**
 
@@ -11,37 +11,13 @@ DIALOGUE is a dimensionality reduction approach that uses cross-cell-type associ
 
 # **Quick start**
 
-To install you can either use ```devtools::install_github("DIALOGUE",your_user_name)``` or ```devtools::install("DIALOGUE")```
+To install DIALOGUE you can either use ```devtools::install_github("DIALOGUE",your_user_name)``` or just download the [package](https://singlecell.broadinstitute.org/single_cell/study/SCP958/dialogue#study-download) and use ```devtools::install("DIALOGUE")```
 
-The data for testing is provided in the 
-[Single Cell Portal](https://singlecell.broadinstitute.org/single_cell/study/SCP958/dialogue#study-download)
-(make sure to download and uncompress the package to the DIALOGUE directory).
+Here you can find a simple [step-by-step example](https://github.com/livnatje/DIALOGUE/wiki/Step-by-step-example).
 
-To run a toy example, download the toy example data
-```
-rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
-```
-Find multicellular programs:
-```
-R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "DIALOGUE.results/")
-```
-``k`` denotes the number of multicellular programs (MCPs) that will be identified. The different MCPs are not correlated with one another, and the cross-cell-type correlations observed within an MCP usually decreases with k, such that the first few MCPs depict most of the multicellular co-expression. DIALOGUE will always find the same MCPs or a subset of them, no matter which k is used.
+All you need for the **input** is the single-cell transcriptomes of different cell types, usually together with some more compact representation (e.g., PCs). The **output** will be multicellular programs (MCPs) of co-regulated genes across the different cell types. Each MCP consists of cell-type-specific gene subsets.
 
-See ```?DIALOGUE::DIALOGUE.run``` for more information.
-
-You can also reproduce the colon/IBD multicellular program reported in our paper using the following code 
-```
-rA<-readRDS(system.file("extdata", "IBD.data.rds", package = "DIALOGUE"))
-R<-DIALOGUE.run(rA = rA,main = "IBD",k = 2,results.dir = "DIALOGUE.results/")
-```
-
-# Output
-
-It will generate figures to depict the association between the different cell-type-components of each multicellular program.
-
-# General notes
-
-DIALOGUE maps multicellular programs (MCPs). Each MCP is composed of two or more co-regulated cell-type-specific components. 
+For specific cell-cell "interactions" you can run the pairwise version, using the data of two cell types of interest as input. DIALOGUE can also identify MCPs that span multiple cell types (see **_Jerby-Arnon and Regev BioRxiv 2020_** for examples on 5 and 6 cell types). 
 
 # Citation
 
