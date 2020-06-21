@@ -2,21 +2,22 @@
 #' @description An S4 class that represents a subset of cells (for example, a particular cell type).
 #' 
 #' @slot name cell type name;
-#' @slot cells cell identifiers (1xn);
-#' @slot tpm gene expression matrix (mxn)
-#' @slot genes genes (1xm) represented in the [tpm] matrix;
-#' @slot X features matrix (kxn), e.g., PCs, NMF components, tpm etc.
+#' @slot cells cell identifiers (n x 1);
+#' @slot tpm gene expression matrix (m x n)
+#' @slot genes genes (m x 1) represented in the [tpm] matrix;
+#' @slot X features matrix (k x n), e.g., PCs, NMF components, tpm etc.
 #' These features will be used to identify the multicellular programs.
-#' @slot samples the samples corresponding to the cells in [cells] (1xn)
+#' @slot samples the samples corresponding to the cells in [cells] (n x 1)
 #' @seealso See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
 #' \code{\link{DIALOGUE.plot}}
 #' @author Livnat Jerby-Arnon
 cell.type <- setClass(Class = "cell.type",
                       slots = c("name","cells","genes",
                                 "tpm","tpmAv","zscores",
-                                "X","samples","cellQ",
+                                "X","samples",
+                                "metadata",
                                 "scores","scoresAv",
-                                "tme","gene.pval","conf",
+                                "tme","gene.pval",
                                 "tme.OE",
                                 "extra.scores",
                                 "sig"))
@@ -35,7 +36,7 @@ cell.type <- setClass(Class = "cell.type",
 #' cellQ = colSumes(tpm>0),X = PCs)
 #' @field cell.type a representation of a specific type of cells
 
-make.cell.type<-function(name,tpm,samples,cellQ,X = NULL,conf = NULL,
+make.cell.type<-function(name,tpm,samples,X = NULL,metadata = NULL,
                          tpmAv = t(average.mat.rows(t(tpm),samples))){
   r<-cell.type(name = name,
                cells = colnames(tpm),
@@ -44,8 +45,7 @@ make.cell.type<-function(name,tpm,samples,cellQ,X = NULL,conf = NULL,
                tpmAv = tpmAv,
                X = X,
                samples = samples,
-               cellQ = cellQ,
-               conf = conf,
+               metadata = metadata,
                extra.scores = list())
   return(r)
 }
@@ -56,7 +56,6 @@ cell.type.2.list<-function(r,idx){
   }
   r1<-lapply(idx,function(x) slot(r,name = x))
   names(r1)<-idx
-  if(is.null(r@conf)){return(r1)}
-  for(x in colnames(r@conf)){r1[[x]]<-r@conf[,x]}
+  for(x in colnames(r@metadata)){r1[[x]]<-r@metadata[,x]}
   return(r1)
 }

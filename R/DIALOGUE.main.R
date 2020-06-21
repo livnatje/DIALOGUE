@@ -2,59 +2,80 @@
 #'
 #' DIALOGUE is a dimensionality reduction approach that uses cross-cell-type
 #' associations to identify multicellular programs and map the cell transcriptome
-#' as a function of its environment. 
-#' 
+#' as a function of its environment.
+#'
 #' @param rA list of \linkS4class{cell.type} objects.
-#' @param k the number of multicellular programs to identify;
+#' @param k the number of multicellular programs (MCPs) to identify;
 #' @param main results' name;
 #' @param results.dir path to the results directory, where the output will be saved;
 #' @param plot.flag if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;
-#' @param add.effects whether to add additional covariates to the multilevel model;
-#' if TRUE then the covariates will extracted from the [conf] slot in the \linkS4class{cell.type} objects;
-#' default is FALSE.
-#' 
+#' @param conf the names of covariates in the multilevel model, which will be extracted from the [metadata] slot
+#' in the \linkS4class{cell.type} objects; default is ["cellQ"].
+#' @param pheno the name of the binary feature to be tested for association with the MCPs.
+#'
 #' @return A list with the following components:
 #' @return sig -  the multicellular programs, given as a list of signatures;
 #' @return scores - the multicellular programs' scores in each cell;
 #' @return gene.pval - the cross-cell-type p-values of each program;
 #' @return pref - the correlation (R) and association (mixed-effects p-value) between the cell-type-sepcific
 #' components of each multicellular programs.
-#' @example 
+#' @example
 #' To run a toy example, first download
 #' rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
 #' summary(rA)
 #' Length Class     Mode
-#' TA2         1      cell.type S4  
+#' TA2         1      cell.type S4
 #' Macrophages 1      cell.type S4
 #' CD8         1      cell.type S4
 #' Find multicellular programs:
 #' R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "~/Desktop/DIALOGUE.results/")
-#' 
+#'
 #' To regenerate the IBD results provided in our manuscript:
 #' rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
 #' R<-DIALOGUE.run(rA = rA,main = "IBD",k = 5,results.dir = "~/Desktop/DIALOGUE.results/")
-#' 
+#'
 #' @seealso See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
-#' \code{\link{DIALOGUE.plot}}
+
 #' @author Livnat Jerby-Arnon
-#' @references 
+#' @references
 #' Jerby-Arnon and Regev, Mapping multicellular configurations using single-cell data
 #' @export
-#' 
+#'
 DIALOGUE.run<-function(rA,main,k = 2,
                        results.dir = "~/Desktop/DIALOGUE.results/",
-                       plot.flag = T,add.effects = F){
+                       plot.flag = T,conf = "cellQ",pheno = NULL){
   full.version <- F
-  R<-DIALOGUE1(rA,k = k,main = main,results.dir = results.dir)
-  R<-DIALOGUE2(rA = rA,main = main,results.dir = results.dir,add.effects = add.effects)
-  R<-DIALOGUE3(rA = rA,main = main,results.dir = results.dir,full.version = full.version)
+  R<-DIALOGUE1(rA,k = k,main = main,results.dir = results.dir,conf = conf)
+  R<-DIALOGUE2(rA = rA,main = main,results.dir = results.dir)
+  R<-DIALOGUE3(rA = rA,main = main,results.dir = results.dir,
+               full.version = full.version,pheno = pheno)
   if(plot.flag){
-    DIALOGUE.plot(R,results.dir = results.dir)
+    DIALOGUE.plot(R,results.dir = results.dir,pheno = pheno)
   }
   return(R)
 }
 
-DIALOGUE1<-function(rA,k2 = 5,main,results.dir = "~/Desktop/DIALOGUE.results/"){
+DIALOGUE.pheno<-function(R,pheno =  "clin.status"){
+  k<-R$k["DIALOGUE"]
+  f<-function(X){
+    r1<-lapply(R$conf, function(x) X[,x])
+    names(r1)<-R$conf
+    r1$pheno<-X[,pheno]
+    r1<-c(r1,list(scores = as.matrix(X[,1:k]),samples = X$samples))
+    z<-apply.formula.HLM(r = r1,Y = r1$scores, X = r1$pheno,
+                         MARGIN = 2,formula = R$frm)[,1]
+    return(z)
+  }
+  Z<-laply(R$scores,f)
+  X<-NULL;for(x in R$scores){X<-rbind(X,x)}
+  R$conf<-c(R$conf[1],"cell.type")
+  colnames(Z)<-names(R$MCPs)
+  Z<-rbind(Z,f(X))
+  rownames(Z)<-c(names(R$scores),"All")
+  return(Z)
+}
+
+DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",conf = "cellQ"){
   print("#************DIALOGUE Step I: Canonical Correlation Analysis (CCA)************#")
   X<-lapply(rA, function(r){
     X1<-average.mat.rows(r@X,r@samples,f = colMedians)
@@ -96,10 +117,10 @@ DIALOGUE1<-function(rA,k2 = 5,main,results.dir = "~/Desktop/DIALOGUE.results/"){
   if(missing(main)){
     main<-paste0(names(out$ws),collapse = "_")
   }
-  
+
   R<-list(name = paste0("DIALOGUE1_",main),
           cell.types = cell.types,k = c(k,laply(X,ncol)),
-          samples = samplesU,sample.PCs = X,
+          samples = samplesU,sample.PCs = X,conf = conf,
           cca = out,cca.cor = cca.cor,
           cca.scores = list(),cca.gene.cor = list(),
           cca.sig = list(),cca.redun.cor = list())
@@ -109,14 +130,13 @@ DIALOGUE1<-function(rA,k2 = 5,main,results.dir = "~/Desktop/DIALOGUE.results/"){
     r<-rA[[x]]
     y[[x]]<-r@X[,1:k1]%*%out$ws[[x]]
     scores0<-as.matrix(y[[x]])
-    conf<-r@cellQ
-    if(!is.null(r@conf)){conf<-cbind.data.frame(r@cellQ,r@conf)}
-    r@scores<-t(get.residuals(t(scores0),conf))
+    conf.m<-r@metadata[,conf]
+    r@scores<-t(get.residuals(t(scores0),conf.m))
     r@scoresAv<-average.mat.rows(r@scores,r@samples,f = colMedians)
     R$cca.scores[[x]]<-r@scores
     R$cca.gene.cor[[x]]<-cor(t(r@tpm),r@scores)
     R$cca.sig[[x]]<-get.top.cor(R$cca.gene.cor[[x]],100,min.ci = 0.05)
-    R$cca.redun.cor[[x]]<-cor(r@scores[,1:k2])
+    R$cca.redun.cor[[x]]<-cor(r@scores[,1:k])
   }
 
   saveRDS(R,file = paste0(results.dir,"/",R$name,".rds"))
@@ -124,19 +144,14 @@ DIALOGUE1<-function(rA,k2 = 5,main,results.dir = "~/Desktop/DIALOGUE.results/"){
   return(R)
 }
 
-DIALOGUE2<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",add.effects = T){
+DIALOGUE2<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/"){
   cell.types<-names(rA)
   if(missing(main)){main<-paste0(cell.types,collapse = "_")}
   file1<-paste0(results.dir,"/DIALOGUE1_",main,".rds")
   file2<-paste0(results.dir,"/DIALOGUE2_",main,".rds")
 
   R<-readRDS(file1)
-  if(add.effects & !is.null(rA[[1]]@conf)){
-    R$frm<-paste("y ~ (1 | samples) + x + cellQ +",
-                 paste(colnames(rA[[1]]@conf),collapse = " +"))
-  }else{
-    R$frm<-"y ~ (1 | samples) + x + cellQ"
-  }
+  R$frm<-paste("y ~ (1 | samples) + x + ",paste(R$conf,collapse = " +"))
 
   k2<-ncol(R$cca$ws[[1]])
   pairs1<-t(combn(cell.types,2))
@@ -217,7 +232,7 @@ DIALOGUE2.mixed.effects<-function(r1,x,sig2,frm = "y ~ (1 | samples) + x + cellQ
   return(P)
 }
 
-DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.version = F){
+DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.version = F,pheno = NULL){
   print("#************DIALOGUE Step III: Finalizing the scores************#")
   cell.types<-names(rA)
   if(missing(main)){main<-paste0(cell.types,collapse = "_")}
@@ -247,8 +262,11 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
   R$gene.pval<-lapply(rA,function(r1) r1@gene.pval)
   R$sig<-lapply(rA,function(r1) r1@sig)
   R$scores<-lapply(rA,function(r1){
-    X<-cbind.data.frame(r1@scores,samples = r1@samples,cells = r1@cells, cell.type = r1@name)
-    if(!is.null(r1@conf)){X<-cbind.data.frame(X,conf = r1@conf)}
+    X<-r1@scores
+    colnames(X)<-sub("C","MCP",colnames(X))
+    X<-cbind.data.frame(r1@scores,samples = r1@samples,
+                        cells = r1@cells, cell.type = r1@name,
+                        r1@metadata)
     return(X)})
   names(R$gene.pval)<-cell.types
   names(R$sig)<-cell.types
@@ -260,9 +278,24 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
     file.remove(paste0(results.dir,"DIALOGUE2_",main,".rds"))
     unlink(paste0(results.dir,"DIALOGUE2_",main,"/"),recursive = T)
   }
+
+  sig1<-unlist(R$sig,recursive = F)
+  sig1<-c(sig1[grepl("up",names(sig1))],sig1[grepl("down",names(sig1))])
+  R$MCPs<-lapply(1:R$k,function(x){
+    idx<-paste0("C",x,".")
+    sig1<-sig1[grepl(idx,names(sig1))]
+    names(sig1)<-gsub(idx,"",names(sig1))
+
+    return(sig1)
+  })
+  names(R$MCPs)<-paste0("MCP",1:R$k)
   fileName<-paste0(results.dir,"DLG.full.output_",main,".rds")
-  saveRDS(R,file = fileName)
-  R<-R[c("sig","scores","gene.pval","pref","k","cell.types","name")]
+  if(full.version){saveRDS(R,file = fileName)}
+  
+  if(!is.null(pheno)){R$pheno<-DIALOGUE.pheno(R,pheno = pheno)}
+  if(full.version){saveRDS(R,file = fileName)}
+  
+  R<-R[intersect(names(R),c("MCPs","scores","gene.pval","pref","k","cell.types","name","pheno"))]
   fileName<-paste0(results.dir,"DLG.output_",main,".rds")
   saveRDS(R,file = fileName)
   return(R)
@@ -337,12 +370,11 @@ DLG.find.scoring<-function(r1,R){
   }
   m<-lapply(colnames(r1@extra.scores$cca0), f)
   # r1@scores0<-t(laply(m,function(x) x$scores))
-  conf<-r1@cellQ
-  if(!is.null(r1@conf)){conf<-cbind.data.frame(r1@cellQ,r1@conf)}
+  conf.m<-r1@metadata[,R$conf]
   r1@extra.scores$nnl0<-t(laply(m,function(x) x$scores))
   colnames(r1@extra.scores$nnl0)<-colnames(r1@extra.scores$cca0)
-  r1@extra.scores$cca<-t(get.residuals(t(r1@extra.scores$cca0),conf))
-  r1@scores<-t(get.residuals(t(r1@extra.scores$nnl0),conf))
+  r1@extra.scores$cca<-t(get.residuals(t(r1@extra.scores$cca0),conf.m))
+  r1@scores<-t(get.residuals(t(r1@extra.scores$nnl0),conf.m))
   r1@scoresAv<-average.mat.rows(r1@scores,r1@samples)
   r1@gene.pval<-NULL
   for(x in m){
@@ -423,7 +455,7 @@ DLG.cor.plot<-function(r1,r2,idx,q1 = 0.25,q2 = 0.75,sd.flag = F){
 }
 
 DLG.hlm.pval<-function(r1,r2,formula = "y ~ (1 | samples) + x + cellQ"){
-  idx<-c("samples","scores",intersect(slotNames(r1),setdiff(gsub(" ","",get.strsplit(formula,"+ ",1:10)),NA)))
+  idx<-c("samples","scores","tme.OE",intersect(slotNames(r1),setdiff(gsub(" ","",get.strsplit(formula,"+ ",1:10)),NA)))
   r1<-cell.type.2.list(r1,idx = idx)
   r2<-cell.type.2.list(r2,idx = idx)
   f<-function(x){
