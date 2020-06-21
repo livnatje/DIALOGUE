@@ -1,0 +1,16 @@
+Package: DIALOGUE
+Title: DIALOGUE is a dimensionality reduction algorithm that uses cross-cell-type associations to identify multicellular programs and map the cell transcriptome as a function of its environment.
+Version: 1.0
+Authors@R: 
+    person(given = "Livnat",
+           family = "Jerby-Arnon",
+           role = c("aut", "cre"),
+           email = "livnat.jerby@gmail.com",
+           comment = c(ORCID = "0000-0002-4037-386X"))
+Description: Given single-cell data that was obtained across different spatial locations or samples, DIALOGUE treats different types of cells from the same micro/microenvironment or sample as different representations of the same entity. It first uses penalized matrix decomposition to preform penalized canonical variates analysis (CVA) on the average cell-type-specific expression of each niches/samples and identify the initial multicellular programs. Each multicellular program is composed of co-regulated cell-type-specific programs that are defined as a sparse linear combination of genes (Fig. 1a, Methods). It then preforms multilevel (hierarchical) modeling to prune and refines the programs based on the underlining distribution of cell states across and within niches/samples (instead of using only the averages),  while controlling for potential confounders.
+License: Free to use! Please cite our paper (Jerby-Arnon and Regev, 2020)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.0
+Depends: lme4, lmerTest, PMA, plyr, matrixStats, psych, stringi, RColorBrewer, unikn, reshape2, ggplot2, grid
+
