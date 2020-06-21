@@ -8,9 +8,8 @@ make.cell.type(
   name,
   tpm,
   samples,
-  cellQ,
   X = NULL,
-  conf = NULL,
+  metadata = NULL,
   tpmAv = t(average.mat.rows(t(tpm), samples))
 )
 }
@@ -21,9 +20,9 @@ make.cell.type(
 
 \item{samples}{the sample of each cell (1xn)}
 
-\item{cellQ}{cell quality measures, e.g., number of reads/genes detected (1xn)}
+\item{X}{features matrix (kxn), e.g., PCs, NMF components, tpm etc.; these features will be used to identify the multicellular programs.}
 
-\item{X}{features matrix (kxn), e.g., PCs, NMF components, tpm etc.}
+\item{cellQ}{cell quality measures, e.g., number of reads/genes detected (1xn)}
 }
 \description{
 This function generates a \linkS4class{cell.type} object for DIALOGUE.

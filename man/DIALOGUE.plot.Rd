@@ -4,7 +4,7 @@
 \alias{DIALOGUE.plot}
 \title{DIALOGUE.plot}
 \usage{
-DIALOGUE.plot(R, results.dir = "~/Desktop/DIALOGUE.results/")
+DIALOGUE.plot(R, results.dir = "~/Desktop/DIALOGUE.results/", pheno = NULL)
 }
 \arguments{
 \item{rA}{list of cell type objects (see cell.type)}

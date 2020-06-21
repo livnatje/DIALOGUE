@@ -10,7 +10,8 @@ DIALOGUE.run(
   k = 2,
   results.dir = "~/Desktop/DIALOGUE.results/",
   plot.flag = T,
-  add.effects = F
+  conf = "cellQ",
+  pheno = NULL
 )
 }
 \arguments{
@@ -18,15 +19,16 @@ DIALOGUE.run(
 
 \item{main}{results' name;}
 
-\item{k}{the number of multicellular programs to identify;}
+\item{k}{the number of multicellular programs (MCPs) to identify;}
 
 \item{results.dir}{path to the results directory, where the output will be saved;}
 
 \item{plot.flag}{if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;}
 
-\item{add.effects}{whether to add additional covariates to the multilevel model;
-if TRUE then the covariates will extracted from the [conf] slot in the \linkS4class{cell.type} objects;
-default is FALSE.}
+\item{conf}{the names of covariates in the multilevel model, which will be extracted from the [metadata] slot
+in the \linkS4class{cell.type} objects; default is ["cellQ"].}
+
+\item{pheno}{the name of the binary feature to be tested for association with the MCPs.}
 }
 \value{
 A list with the following components:
@@ -50,7 +52,6 @@ Jerby-Arnon and Regev, Mapping multicellular configurations using single-cell da
 }
 \seealso{
 See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
-\code{\link{DIALOGUE.plot}}
 }
 \author{
 Livnat Jerby-Arnon
