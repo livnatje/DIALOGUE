@@ -7,7 +7,7 @@ DIALOGUE is a dimensionality reduction method that uses cross-cell-type associat
 # **Requirements**
 
 * R (tested in R version 3.4.0).
-* R libraries: lme4, lmerTest, PMA, plyr, matrixStats, psych, stringi, RColorBrewer, unikn, reshape2, ggplot2
+* R libraries: lme4, lmerTest, PMA, plyr, matrixStats, psych, stringi, RColorBrewer, unikn, reshape2, ggplot2, beanplot
 
 # **Quick start**
 
