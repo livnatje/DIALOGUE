@@ -264,7 +264,7 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
     x1<-pairs1[i,1];x2<-pairs1[i,2]
     x<-paste0(x1,".vs.",x2)
     r1<-rA[[x1]];r2<-rA[[x2]]
-    r<-DLG.get.OE(r1,r2,plot.flag = T,compute.scores = F)
+    r<-DLG.get.OE(r1,r2,plot.flag = F,compute.scores = F)
     r1<-r$r1;r2<-r$r2
     idx<-intersect(get.abundant(r1@samples),get.abundant(r2@samples))
     R$pref[[x]]<-cbind.data.frame(R = diag(cor(r1@scoresAv[idx,],r2@scoresAv[idx,])),
@@ -414,11 +414,11 @@ DLG.iterative.nnls<-function(X,y,gene.pval){
     y.fit<-y.fit+v[[main]]$fitted
     gene.pval$coef[f.rank==n1]<-v[[main]]$x
     if(cor(y1,y.fit)>0.95){
-      cor.plot(y.fit,y1,main = paste("NNLS fitting",n1))
+      # cor.plot(y.fit,y1,main = paste("NNLS fitting",n1))
       return(gene.pval)
     }
   }
-  cor.plot(y.fit,y1,main = paste("NNLS fitting -",n1))
+  # cor.plot(y.fit,y1,main = paste("NNLS fitting -",n1))
   return(gene.pval)
 }
 
