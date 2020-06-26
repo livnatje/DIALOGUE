@@ -11,7 +11,8 @@ DIALOGUE.run(
   results.dir = "~/Desktop/DIALOGUE.results/",
   plot.flag = T,
   conf = "cellQ",
-  pheno = NULL
+  pheno = NULL,
+  PMD2 = F
 )
 }
 \arguments{
@@ -23,35 +24,42 @@ DIALOGUE.run(
 
 \item{results.dir}{path to the results directory, where the output will be saved;}
 
-\item{plot.flag}{if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;}
+\item{plot.flag}{if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is TRUE;}
 
-\item{conf}{the names of covariates in the multilevel model, which will be extracted from the [metadata] slot
-in the \linkS4class{cell.type} objects; default is ["cellQ"].}
+\item{conf}{(optional) the names of covariates in the multilevel model, which will be extracted from the [metadata] slot in the \linkS4class{cell.type} objects; default is ["cellQ"].}
 
-\item{pheno}{the name of the binary feature to be tested for association with the MCPs.}
+\item{pheno}{(optional) the name of the binary feature to be tested for association with the MCPs.}
 }
 \value{
 A list with the following components:
 
-sig -  the multicellular programs, given as a list of signatures;
+MCPs -  the multicellular programs, given as a list of signatures;
 
 scores - the multicellular programs' scores in each cell;
 
 gene.pval - the cross-cell-type p-values of each program;
 
-pref - the correlation (R) and association (mixed-effects p-value) between the cell-type-sepcific
-components of each multicellular programs.
+pref - the correlation (R) and association (mixed-effects p-value) between the cell-type-sepcific components of each multicellular programs.
+
+phenoZ - The association of each MCP with the phenotype of interest, given as the association's direction times -log10(p-value).
 }
 \description{
 DIALOGUE is a dimensionality reduction approach that uses cross-cell-type
 associations to identify multicellular programs and map the cell transcriptome
 as a function of its environment.
 }
+\examples{
+# To run a toy example, first download
+rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
+summary(rA)
+# Find multicellular programs:
+R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "~/Desktop/DIALOGUE.results/")
+}
 \references{
 Jerby-Arnon and Regev, Mapping multicellular configurations using single-cell data
 }
 \seealso{
-See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
+See \href{https://github.com/livnatje/DIALOGUE/wiki}{DIALOGUE's wiki} for more details.
 }
 \author{
 Livnat Jerby-Arnon

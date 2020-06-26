@@ -7,7 +7,11 @@
 DIALOGUE.plot(R, results.dir = "~/Desktop/DIALOGUE.results/", pheno = NULL)
 }
 \arguments{
-\item{rA}{list of cell type objects (see cell.type)}
+\item{R}{DIALOGUE output}
+
+\item{results.dir}{the directory where the PDF figure file will be located}
+
+\item{pheno}{(optional) the name of a binary feature of interest to visualize in relation to the MCPs.}
 }
 \description{
 Plot DIALOGUE results.
@@ -16,11 +20,18 @@ of each multicellular program as a function of its other components;
 and the composition of each multicellular program, depicting how many of its genes
 are cell-type-specific, and how many are shared across multiple cell types.
 }
+\details{
+In case there is a specific feature or phenotype of interest DIALOGUE will plot the MCP
+expression when stratifying the cells according to that classification.
+}
 \examples{
-R<-DIALOGUE.run(rA,results.dir = "~/Desktop/Results/")
-R<-DIALOGE.plot(R,results.dir = "~/Desktop/Figures/")
-Alternatively
+# Run DIALOGUE
+R<-DIALOGUE.run(rA,results.dir = "~/Desktop/Results/",plot.flag = F)
+# Plot the results
+DIALOGE.plot(R,results.dir = "~/Desktop/Figures/",pheno = R$pheno)
+# Alternatively
 R<-DIALOGUE.run(rA,results.dir = "~/Desktop/Results/",plot.flag = T)
+
 }
 \author{
 Livnat Jerby-Arnon
