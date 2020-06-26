@@ -5,10 +5,10 @@
 #' @slot cells cell identifiers (n x 1);
 #' @slot tpm gene expression matrix (m x n)
 #' @slot genes genes (m x 1) represented in the [tpm] matrix;
-#' @slot X features matrix (k x n), e.g., PCs, NMF components, tpm etc.
+#' @slot X features matrix (n x k), e.g., PCs, NMF components, tpm etc.
 #' These features will be used to identify the multicellular programs.
 #' @slot samples the samples corresponding to the cells in [cells] (n x 1)
-#' @seealso See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
+#' @seealso See \href{https://github.com/livnatje/DIALOGUE/wiki}{DIALOGUE's wiki} for more details.
 #' \code{\link{DIALOGUE.plot}}
 #' @author Livnat Jerby-Arnon
 cell.type <- setClass(Class = "cell.type",
@@ -30,11 +30,8 @@ cell.type <- setClass(Class = "cell.type",
 #' @param X features matrix (kxn), e.g., PCs, NMF components, tpm etc.; these features will be used to identify the multicellular programs.
 #' @param samples the sample of each cell (1xn)
 #' @param cellQ cell quality measures, e.g., number of reads/genes detected (1xn)
-#' @export
-#' @examples
-#' r<-make.cell.type(name = "CD8.T.cells",tpm = tpm,samples = c("sample1,"sample1","sample2","sample2"),
-#' cellQ = colSumes(tpm>0),X = PCs)
 #' @field cell.type a representation of a specific type of cells
+#' @export
 
 make.cell.type<-function(name,tpm,samples,X = NULL,metadata = NULL,
                          tpmAv = t(average.mat.rows(t(tpm),samples))){

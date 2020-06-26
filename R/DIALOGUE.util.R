@@ -80,20 +80,10 @@ cap.mat<-function(M,cap = 0.01,MARGIN = 1){
 
 get.residuals<-function(X,g,MARGIN = 1){
   if(MARGIN == 2){return(t(get.residuals(t(X),g,MARGIN = 1)))}
-  g<-as.matrix(g)
-  b<-rowSums(is.na(g))==0
-  g<-as.matrix(g[b,])
-  residuals<-matrix(nrow = nrow(X),ncol = ncol(X))
+  f<-function(y){return(lm(y~.,data = as.data.frame(g))$residuals)}
+  residuals<-t(apply(X,1,f))
   rownames(residuals)<-rownames(X)
   colnames(residuals)<-colnames(X)
-  f<-function(y){
-    b1<-!is.na(y)
-    y<-y[b1];g<-g[b1,]
-    v<-matrix(nrow = length(b1))
-    v[b1]<-lm(y~.,data = as.data.frame(g))$residuals
-    return(v)
-  }
-  residuals[,b]<-t(apply(X[,b],1,f))
   return(residuals)
 }
 

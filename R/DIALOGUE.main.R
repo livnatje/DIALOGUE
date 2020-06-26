@@ -8,33 +8,23 @@
 #' @param k the number of multicellular programs (MCPs) to identify;
 #' @param main results' name;
 #' @param results.dir path to the results directory, where the output will be saved;
-#' @param plot.flag if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;
-#' @param conf the names of covariates in the multilevel model, which will be extracted from the [metadata] slot
-#' in the \linkS4class{cell.type} objects; default is ["cellQ"].
-#' @param pheno the name of the binary feature to be tested for association with the MCPs.
+#' @param plot.flag if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is TRUE;
+#' @param conf (optional) the names of covariates in the multilevel model, which will be extracted from the [metadata] slot in the \linkS4class{cell.type} objects; default is ["cellQ"].
+#' @param pheno (optional) the name of the binary feature to be tested for association with the MCPs.
 #'
 #' @return A list with the following components:
-#' @return sig -  the multicellular programs, given as a list of signatures;
+#' @return MCPs -  the multicellular programs, given as a list of signatures;
 #' @return scores - the multicellular programs' scores in each cell;
 #' @return gene.pval - the cross-cell-type p-values of each program;
-#' @return pref - the correlation (R) and association (mixed-effects p-value) between the cell-type-sepcific
-#' components of each multicellular programs.
-#' @example
-#' To run a toy example, first download
+#' @return pref - the correlation (R) and association (mixed-effects p-value) between the cell-type-sepcific components of each multicellular programs.
+#' @return phenoZ - The association of each MCP with the phenotype of interest, given as the association's direction times -log10(p-value).
+#' @examples
+#' # To run a toy example, first download
 #' rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
 #' summary(rA)
-#' Length Class     Mode
-#' TA2         1      cell.type S4
-#' Macrophages 1      cell.type S4
-#' CD8         1      cell.type S4
-#' Find multicellular programs:
+#' # Find multicellular programs:
 #' R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "~/Desktop/DIALOGUE.results/")
-#'
-#' To regenerate the IBD results provided in our manuscript:
-#' rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
-#' R<-DIALOGUE.run(rA = rA,main = "IBD",k = 5,results.dir = "~/Desktop/DIALOGUE.results/")
-#'
-#' @seealso See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
+#' @seealso See \href{https://github.com/livnatje/DIALOGUE/wiki}{DIALOGUE's wiki} for more details.
 
 #' @author Livnat Jerby-Arnon
 #' @references
@@ -43,9 +33,10 @@
 #'
 DIALOGUE.run<-function(rA,main,k = 2,
                        results.dir = "~/Desktop/DIALOGUE.results/",
-                       plot.flag = T,conf = "cellQ",pheno = NULL){
+                       plot.flag = T,conf = "cellQ",pheno = NULL,
+                       PMD2 = F){
   full.version <- F
-  R<-DIALOGUE1(rA,k = k,main = main,results.dir = results.dir,conf = conf)
+  R<-DIALOGUE1(rA,k = k,main = main,results.dir = results.dir,conf = conf, PMD2 = PMD2)
   R<-DIALOGUE2(rA = rA,main = main,results.dir = results.dir)
   R<-DIALOGUE3(rA = rA,main = main,results.dir = results.dir,
                full.version = full.version,pheno = pheno)
@@ -55,6 +46,7 @@ DIALOGUE.run<-function(rA,main,k = 2,
   return(R)
 }
 
+#' @export
 DIALOGUE.pheno<-function(R,pheno =  "clin.status"){
   k<-R$k["DIALOGUE"]
   f<-function(X){
@@ -75,8 +67,8 @@ DIALOGUE.pheno<-function(R,pheno =  "clin.status"){
   return(Z)
 }
 
-DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",conf = "cellQ"){
-  print("#************DIALOGUE Step I: Canonical Correlation Analysis (CCA)************#")
+DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",conf = "cellQ",PMD2 = F){
+  print("#************DIALOGUE Step I: PMD ************#")
   X<-lapply(rA, function(r){
     X1<-average.mat.rows(r@X,r@samples,f = colMedians)
     return(X1)
@@ -98,14 +90,12 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
   }
   X<-lapply(X, f)
   k1<-ncol(X[[1]])
-  set.seed(1234)
-  perm.out <- MultiCCA.permute(X,type=rep("standard",length(X)),trace = F)
-  out <- MultiCCA(X, type=rep("standard",length(X)),
-                  penalty=perm.out$bestpenalties,niter = 100,
-                  ncomponents=k, ws=perm.out$ws.init,trace = F)
+
+  out<-DIALOGUE1.PMD(X = X,k = k,PMD2 = PMD2)
+
   names(out$ws)<-names(X)
   for(i in names(X)){
-    colnames(out$ws[[i]])<-paste0("C",1:ncol(out$ws[[i]]))
+    colnames(out$ws[[i]])<-paste0("MCP",1:ncol(out$ws[[i]]))
     rownames(out$ws[[i]])<-colnames(X[[i]])
   }
   Y<-lapply(names(X), function(i) X[[i]]%*%out$ws[[i]])
@@ -142,6 +132,28 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
   saveRDS(R,file = paste0(results.dir,"/",R$name,".rds"))
   dir.create(paste0(results.dir,"/DIALOGUE2_",main))
   return(R)
+}
+
+DIALOGUE1.PMD<-function(X,k,PMD2 = F){
+  set.seed(1234)
+  perm.out <- MultiCCA.permute(X,type=rep("standard",length(X)),trace = F)
+  out <- MultiCCA(X, type=rep("standard",length(X)),
+                  penalty=perm.out$bestpenalties,niter = 100,
+                  ncomponents=k, ws=perm.out$ws.init,trace = F)
+  m<-laply(out$ws,function(x) colSums(x!=0))
+  colnames(m)<-paste0("MCP",1:ncol(m))
+  rownames(m)<-names(X)
+  if(!PMD2){return(out)}
+
+  print("PMD #1");print("Number of features");print(m);
+  set.seed(1234)
+  perm.out <- MultiCCA.permute(X,type=rep("standard",length(X)),trace = F,penalties = perm.out$penalties[,4:10])
+  out <- MultiCCA(X, type=rep("standard",length(X)),
+                  penalty=perm.out$bestpenalties,niter = 100,
+                  ncomponents=k, ws=perm.out$ws.init,trace = F)
+  m<-laply(out$ws,function(x) colSums(x!=0));rownames(m)<-names(X)
+  print("PMD #2");print("Number of features");print(m)
+  return(out)
 }
 
 DIALOGUE2<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/"){
@@ -233,7 +245,7 @@ DIALOGUE2.mixed.effects<-function(r1,x,sig2,frm = "y ~ (1 | samples) + x + cellQ
 }
 
 DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.version = F,pheno = NULL){
-  print("#************DIALOGUE Step III: Finalizing the scores************#")
+  print("#************Finalizing the scores************#")
   cell.types<-names(rA)
   if(missing(main)){main<-paste0(cell.types,collapse = "_")}
   R<-readRDS(paste0(results.dir,"/DIALOGUE2_",main,".rds"))
@@ -262,8 +274,6 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
   R$gene.pval<-lapply(rA,function(r1) r1@gene.pval)
   R$sig<-lapply(rA,function(r1) r1@sig)
   R$scores<-lapply(rA,function(r1){
-    X<-r1@scores
-    colnames(X)<-sub("C","MCP",colnames(X))
     X<-cbind.data.frame(r1@scores,samples = r1@samples,
                         cells = r1@cells, cell.type = r1@name,
                         r1@metadata)
@@ -273,16 +283,10 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
   names(R$scores)<-cell.types
   R$name<-paste0("DLG.output_",main)
 
-  if(!full.version){
-    file.remove(paste0(results.dir,"DIALOGUE1_",main,".rds"))
-    file.remove(paste0(results.dir,"DIALOGUE2_",main,".rds"))
-    unlink(paste0(results.dir,"DIALOGUE2_",main,"/"),recursive = T)
-  }
-
   sig1<-unlist(R$sig,recursive = F)
   sig1<-c(sig1[grepl("up",names(sig1))],sig1[grepl("down",names(sig1))])
   R$MCPs<-lapply(1:R$k,function(x){
-    idx<-paste0("C",x,".")
+    idx<-paste0("MCP",x,".")
     sig1<-sig1[grepl(idx,names(sig1))]
     names(sig1)<-gsub(idx,"",names(sig1))
 
@@ -291,13 +295,18 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
   names(R$MCPs)<-paste0("MCP",1:R$k)
   fileName<-paste0(results.dir,"DLG.full.output_",main,".rds")
   if(full.version){saveRDS(R,file = fileName)}
-  
-  if(!is.null(pheno)){R$pheno<-DIALOGUE.pheno(R,pheno = pheno)}
+
+  if(!is.null(pheno)){R$phenoZ<-DIALOGUE.pheno(R,pheno = pheno)}
   if(full.version){saveRDS(R,file = fileName)}
-  
-  R<-R[intersect(names(R),c("MCPs","scores","gene.pval","pref","k","cell.types","name","pheno"))]
+  R<-R[intersect(names(R),c("MCPs","scores","gene.pval","pref","k","cell.types","name","phenoZ",results.dir))]
   fileName<-paste0(results.dir,"DLG.output_",main,".rds")
   saveRDS(R,file = fileName)
+
+  if(!full.version){
+    file.remove(paste0(results.dir,"DIALOGUE1_",main,".rds"))
+    file.remove(paste0(results.dir,"DIALOGUE2_",main,".rds"))
+    unlink(paste0(results.dir,"DIALOGUE2_",main,"/"),recursive = T)
+  }
   return(R)
 }
 

@@ -5,12 +5,22 @@
 #' of each multicellular program as a function of its other components;
 #' and the composition of each multicellular program, depicting how many of its genes
 #' are cell-type-specific, and how many are shared across multiple cell types.
-#' @param rA list of cell type objects (see cell.type)
+#'
+#' In case there is a specific feature or phenotype of interest DIALOGUE will plot the MCP
+#' expression when stratifying the cells according to that classification.
+#'
+#' @param R DIALOGUE output
+#' @param results.dir the directory where the PDF figure file will be located
+#' @param pheno (optional) the name of a binary feature of interest to visualize in relation to the MCPs.
+#'
 #' @examples
-#' R<-DIALOGUE.run(rA,results.dir = "~/Desktop/Results/")
-#' R<-DIALOGE.plot(R,results.dir = "~/Desktop/Figures/")
-#' Alternatively
+#' # Run DIALOGUE
+#' R<-DIALOGUE.run(rA,results.dir = "~/Desktop/Results/",plot.flag = F)
+#' # Plot the results
+#' DIALOGE.plot(R,results.dir = "~/Desktop/Figures/",pheno = R$pheno)
+#' # Alternatively
 #' R<-DIALOGUE.run(rA,results.dir = "~/Desktop/Results/",plot.flag = T)
+#'
 #' @author Livnat Jerby-Arnon
 #' @export
 #'
@@ -38,11 +48,11 @@ DIALOGUE.plot.av<-function(R,i,mark.samples = NULL,d = 1){
   f<-function(i){
     m1<-t(laply(R$scoresAv,function(m) m[,i]))*d
     rownames(m1)<-idx;colnames(m1)<-R$cell.types
-    pairs.panels(m1,hist.col = "grey",breaks = 50,bg = col,pch = pch,ellipses = F,smooth = T,lm = T)
+    pairs.panels(m1,hist.col = "grey",breaks = 50,bg = col,pch = pch,ellipses = F,smooth = T,lm = T,stars = T)
     title(i)
     return(m1)
   }
-  idx1<-paste0("C",1:R$k["DIALOGUE"])
+  idx1<-paste0("MCP",1:R$k["DIALOGUE"])
   if(!missing(i)){m1<-f(i);return(cor(m1))}
   m<-lapply(idx1, f)
 }
