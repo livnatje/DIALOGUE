@@ -21,6 +21,6 @@ For specific cell-cell "interactions" you can run the pairwise version, using th
 
 # Citation
 
-Jerby-Arnon and Regev _**Mapping multicellular programs from single-cell transcriptomes**_.
+Jerby-Arnon and Regev _**Mapping multicellular programs from single-cell profiles**_.
 
 
