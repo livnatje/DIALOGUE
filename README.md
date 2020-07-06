@@ -4,11 +4,6 @@ DIALOGUE is a dimensionality reduction method that uses cross-cell-type associat
 
 <img src="https://github.com/livnatje/DIALOGUE/blob/master/Images/DIALOGUE_overview.png" width=900 />
 
-# **Requirements**
-
-* R (tested in R version 3.4.0).
-* R libraries: lme4, lmerTest, PMA, plyr, matrixStats, psych, stringi, RColorBrewer, unikn, reshape2, ggplot2, grid, beanplot
-
 # **Quick start**
 
 To install DIALOGUE you can either use [```devtools::install_github("DIALOGUE",username)```](https://www.rdocumentation.org/packages/devtools/versions/1.13.6/topics/install_github) or just download its R package and use ```devtools::install("DIALOGUE")```
@@ -18,6 +13,11 @@ All you need for the **input** is the single-cell transcriptomes of different ce
 For specific cell-cell "interactions" you can run the pairwise version, using the data of two cell types of interest as input. DIALOGUE can also identify MCPs that span multiple cell types (as we show in our pre-print **_Jerby-Arnon and Regev bioRxiv 2020_**).
 
 See the [tutorial](https://github.com/livnatje/DIALOGUE/wiki/Tutorial) for more details.
+
+### **Requirements**
+
+* R (tested in R version 3.4.0).
+* R libraries: lme4, lmerTest, PMA, plyr, matrixStats, psych, stringi, RColorBrewer, unikn, reshape2, ggplot2, grid, beanplot
 
 # Citation
 
