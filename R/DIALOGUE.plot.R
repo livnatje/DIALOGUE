@@ -25,36 +25,57 @@
 #' @export
 #'
 
-DIALOGUE.plot<-function(R,results.dir = "~/Desktop/DIALOGUE.results/",pheno = NULL){
+DIALOGUE.plot<-function(R,results.dir = "~/Desktop/DIALOGUE.results/",
+                        pheno = NULL,mark.samples = NULL,metadata = NULL,d = 1, MCPs = 1:R$k["DIALOGUE"]){
+  
   pdf(paste0(results.dir,"/",R$name,".pdf"))
-  DIALOGUE.plot.av(R)
+  DIALOGUE.plot.av(R,mark.samples = mark.samples,metadata = metadata,d = d,MCPs = MCPs)
   DIALOGUE.plot.sig.comp(R)
   if(!is.null(pheno)){
-    DIALOGUE.violin.pheno(R,pheno = pheno)
+    DIALOGUE.violin.pheno(R,pheno = pheno,MCPs = MCPs,d = d)
   }
   dev.off();par(font.axis = 2);par(font.lab = 2);par(font = 2)
 }
 
-DIALOGUE.plot.av<-function(R,i,mark.samples = NULL,d = 1){
-  k<-length(R$MCPs)
-  R$cell.types<-names(R$gene.pval)
-  R$scoresAv<-lapply(R$scores,function(m) average.mat.rows(as.matrix(m[,1:k]),m$samples,f = colMedians))
+DIALOGUE.plot.av<-function(R,MCPs,mark.samples = NULL,d = 1,k = R$k["DIALOGUE"],
+                           select.samples = NULL,averaging.function = colMeans,metadata = NULL){
+  R$scoresAv<-lapply(R$scores,function(m) average.mat.rows(as.matrix(m[,1:k]),
+                                                           m$samples,f = R$param$averaging.function))
   idx<-unlist(lapply(R$scoresAv, function(m) rownames(m)))
   idx<-get.abundant(idx,length(R$cell.types))
+  if(!is.null(select.samples)){
+    idx<-intersect(idx,select.samples)
+  }
   R$scoresAv<-lapply(R$scoresAv,function(m) m[idx,])
-  col<-rep("black",length(idx))
-  col[is.element(idx,mark.samples)]<-"red"
-  pch<-ifelse(any(col=="red"),21,16)
+  if(!is.null(metadata)){
+    metadata<-metadata[idx,]
+    col1<-metadata$col
+    if(length(unique(metadata$size))){size1<-1}else{
+      size1<-1.5*metadata$size/max(metadata$size)
+      size1[size1<1]<-1
+    }
+  }else{
+    col1<-rep("black",length(idx))
+    col1[is.element(idx,mark.samples)]<-"red"
+    size1<-1
+  }
+  pch<-ifelse(any(col1=="red"),21,16)
   f<-function(i){
     m1<-t(laply(R$scoresAv,function(m) m[,i]))*d
-    rownames(m1)<-idx;colnames(m1)<-R$cell.types
-    pairs.panels(m1,hist.col = "grey",breaks = 50,bg = col,pch = pch,ellipses = F,smooth = T,lm = T,stars = T)
+    # rownames(m1)<-idx
+    colnames(m1)<-R$cell.types
+    m1<-m1[,R$MCP.cell.types[[i]]]
+    if(length(R$MCP.cell.types[[i]])<2){return()}
+    pairs.panels(m1,hist.col = "grey",breaks = 50,bg = col1,pch = pch,ellipses = F,
+                 smooth = F,lm = T,stars = T,method = "pearson",
+                 cex = size1,cex.cor = 1)
     title(i)
     return(m1)
   }
-  idx1<-paste0("MCP",1:R$k["DIALOGUE"])
-  if(!missing(i)){m1<-f(i);return(cor(m1))}
-  m<-lapply(idx1, f)
+  if(missing(MCPs)){
+    MCPs<-paste0("MCP",1:R$k["DIALOGUE"])
+  }
+  m<-lapply(MCPs, f)
 }
 
 DIALOGUE.plot.sig.comp<-function(R,main = ""){
@@ -65,9 +86,10 @@ DIALOGUE.plot.sig.comp<-function(R,main = ""){
     }else{
       b<-grepl(".down",names(sig1))
     }
-    if(!any(b)){return(rep(length(genes),0))}
+    if(!any(b)){return(rep("",length(genes)))}
     sig1<-sig1[b]
-    names(sig1)<-get.strsplit(names(sig1),".",1)
+    names(sig1)<-gsub(".up","",names(sig1))
+    names(sig1)<-gsub(".down","",names(sig1))
     v<-list.2.ids(genes,sig1)
     return(c(v))
   }
@@ -100,22 +122,28 @@ DIALOGUE.plot.sig.comp<-function(R,main = ""){
   return(m2)
 }
 
-DIALOGUE.violin.pheno<-function(R,pheno = "clinical.status"){
+DIALOGUE.violin.pheno<-function(R,pheno = "pathology",MCPs,selected.samples,d = 1){
   k<-R$k["DIALOGUE"]
   X<-NULL
   for(x in R$scores){
     x[,1:k]<-cap.mat(center.matrix(x[,1:k],dim = 2,sd.flag = T),cap = 0.01,MARGIN = 2)
     X<-rbind(X,x)
+    X<-X[!is.na(X[,pheno]),]
   }
-
-  par(mfrow=c(2,1),oma = c(5, 0, 0, 7))
-  laply(1:k,function(x){
-    violin.split(scores = X[,x],treatment = X[,pheno],
-                 conditions = X$cell.type,
-                 main = paste0("MCP",x))
+  if(!is.element("id",colnames(X))){X$id<-X$cell.type}
+  if(is.logical(X[,pheno])){X[,pheno]<-ifelse(X[,pheno],"Disease","Control")}
+  if(!missing(selected.samples)){X<-X[is.element(X$samples,selected.samples),]}
+  
+  par(mfrow=c(1,1),oma = c(5, 0, 0, 7))
+  f<-function(x){
+    b<-is.element(X$cell.type,R$MCP.cell.types[[x]])
+    violin.split(scores = d*X[b,x],treatment = X[b,pheno],
+                 conditions = X$id[b],
+                 main = x)
     return(x)
-  })
-
+  }
+  if(missing(MCPs)){MCPs<-paste0("MCP",1:k)}
+  laply(MCPs,f)
   return()
 
 }
@@ -189,15 +217,28 @@ multiplot<-function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
-violin.split<-function(scores, treatment, conditions, main = "",xlab = "",ylab = "Scores"){
+violin.split<-function(scores, treatment, conditions, main = "",
+                       xlab = "Sample",ylab = "Scores",legend.flag = T,show.pval = T){
   # require(beanplot)
+  if(length(unique(conditions))==1){
+    p<-t.test.mat(m = rbind(scores,scores),b = treatment == sort(treatment,decreasing = T)[1])[1,1]
+  }else{
+    p<-t.test.groups(x = rbind(scores,scores),b = treatment == sort(treatment,decreasing = T)[1],g = conditions)[1,]
+    p<-p[sort(names(p))]
+  }
+  p[p<(-30)]<-(-30);p[p>30]<-30
+  if(show.pval){
+    conditions<-paste0(conditions,"\n",laply(10^-abs(p[conditions]),my.format.pval))
+  }
   treatment<-as.factor(treatment)
   beanplot(scores ~ treatment*conditions, ll = 0.0,las = 2,
            main = main, side = "both", xlab=xlab,ylab = ylab,
            col = list(c("lightblue", "black"),"gray"),
            axes=T,cex.main = 1)
-  legend("bottomright", fill = c("lightblue","gray"),
-         legend = levels(treatment), box.lty=0)
-  return()
+  if(legend.flag){
+    legend("bottomright", fill = c("lightblue","gray"),
+           legend = levels(treatment), box.lty=0)
+  }
+  return(p)
 }
 

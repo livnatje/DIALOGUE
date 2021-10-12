@@ -16,13 +16,6 @@ average.mat.rows<-function(m,ids,f = colMeans){
   return(m2)
 }
 
-prep4semiOE<-function(r,geneAv = NULL){
-  paste("Preparing",r@name,"for OE computations.")
-  r@zscores<-center.large.matrix(r@tpm,sd.flag = T,v = geneAv)
-  r<-log.comp(r)
-  return(r)
-}
-
 center.large.matrix<-function(m,sd.flag,v = NULL){
   if(is.null(v)){
     v<-rowMeans(m,na.rm = T)
@@ -179,9 +172,15 @@ get.strsplit<-function(v,sep,idx){
 apply.formula.HLM<-function(r,X,Y,MARGIN = 1,formula = "y ~ (1 | samples) + x",ttest.flag = F){
   if(is.matrix(Y)){
     if(ttest.flag){
-      m1<-t.test.mat(Y,X)
-      b<-rowSums(p.adjust.mat(m1[,1:2])<0.1,na.rm = T)>0
-      m1<-m1[b,];Y<-Y[b,]
+      m1<-average.mat.rows(t(Y),paste(r$samples,X,sep = "_"))
+      de1<-t.test.mat(t(m1),get.strsplit(rownames(m1),"_",2)==TRUE)
+      de2<-t.test.mat(Y,X)
+      b1<-rowSums(de1[,1:2]<0.1,na.rm = T)>0
+      b2<-rowSums(p.adjust.mat(de2[,1:2],method = "BH")<0.1,na.rm = T)>0
+      table(b1,b2)
+      b<-b1|b2
+      de.ttest<-cbind.data.frame(sample = de1[,"zscores"],cell = de2[,"zscores"])[b,]
+      Y<-Y[b,]
     }
     m<-t(apply(Y,MARGIN = MARGIN,function(y){formula.HLM(y,X,r,formula = formula)}))
   }else{
@@ -190,7 +189,7 @@ apply.formula.HLM<-function(r,X,Y,MARGIN = 1,formula = "y ~ (1 | samples) + x",t
   colnames(m)<-c("Estimate","P")
   m<-cbind.data.frame(Z = get.cor.zscores(m[,"Estimate"],m[,"P"]),m)
   if(ttest.flag){
-    m<-cbind.data.frame(m,ttest = m1)
+    m<-cbind.data.frame(m,ttest = de.ttest)
   }
   return(m)
 }
@@ -341,3 +340,103 @@ spearman.cor<-function(v1,v2 = NULL,method = 'spearman',use = "pairwise.complete
   }
   return(results)
 }
+
+colMedians<-function(m){
+  m<-apply(m,2,function(x) median(x,na.rm = T))
+  return(m)
+}
+
+t.test.mat<-function(m,b,two.sided=F,rankf = F,fold.changeF = F){
+  if(length(b)!=ncol(m)){
+    print("Error. Inconsistent no. of samples.")
+    return()
+  }
+  if(sum(b)<2||sum(!b)<2){
+    return(get.mat(rownames(m),c('more','less',"zscores")))
+  }
+  if(two.sided){
+    p<-as.matrix(apply(m,1,function(x) t.test(x[b],x[!b])$p.value))
+  }else{
+    p<-t(apply(m,1,function(x) c(t.test(x[b],x[!b],alternative = 'greater')$p.value,
+                                 t.test(x[b],x[!b],alternative = 'less')$p.value)))
+    colnames(p)<-c('more','less')
+    p<-cbind(p,get.p.zscores(p))
+    colnames(p)[3]<-"zscores"
+  }
+  if(rankf){
+    p<-cbind(p,rank(p[,1]),rank(p[,2]))
+    colnames(p)[4:5]<-c("rank.more","rank.less")
+  }
+  if(fold.changeF){
+    p<-cbind.data.frame(p,pos.mean = rowMeans(m[,b]),neg.mean = rowMeans(m[,!b]))
+    p$logFC<-log2(p$pos.mean/p$neg.mean)
+  }
+  
+  return(p)
+}
+
+p.adjust.mat<-function(m,method = "BH"){
+  P<-apply(m,2,function(x) p.adjust(x,method = method))
+  return(P)
+}
+
+my.match<-function(v1,v2){
+  v1<-casefold(my.gsub(pattern = c('_',"-",'.'," ",":"),replacement = '',x = v1))
+  v2<-casefold(my.gsub(pattern = c('_',"-",'.'," ",":"),replacement = '',x = v2))
+  idx<-match(v1,v2)
+  return(idx)
+}
+
+my.gsub<-function(pattern,replacement = '',x){
+  for(i in 1:length(pattern)){
+    x<-gsub(pattern = pattern[i],replacement = replacement ,x = x,fixed = T)
+  }
+  return(x)
+}
+
+apply.anova <- function(X,y,MARGIN = 2){
+  y <- as.factor(y)
+  f<-function(x){
+    a<-aov(x ~ y)
+    p.anova <- unlist(summary(a))['Pr(>F)1']
+    return(p.anova)
+  }
+  P<-apply(X,MARGIN = MARGIN,FUN = f)
+  return(P)
+}
+
+ranksum.test.mat<-function(m,b,zscores.flag = T,two.sided=F){
+  if(two.sided){
+    p<-as.matrix(apply(m,1,function(x) ranksum.test(x[b],x[!b])))
+  }else{
+    p<-t(apply(m,1,function(x) c(ranksum.test(x[b],x[!b],alternative = 'greater'),
+                                 ranksum.test(x[b],x[!b],alternative = 'less'))))
+    colnames(p)<-c('more','less')
+    if(zscores.flag){
+      p<-cbind(p,get.p.zscores(p))
+      colnames(p)[3]<-"zscores"
+    }
+  }
+  return(p)
+}
+
+ranksum.test<-function(v1,v2,alternative="two.sided"){
+  p=NA
+  if (sum(!is.na(v1))==0|sum(!is.na(v2))==0){
+    return(p)
+  }else{
+    p<-wilcox.test(v1,v2,alternative = alternative)$p.value  
+  }
+  return(p)
+}
+
+get.p.zscores<-function(p){
+  b<-p[,1]>0.5
+  b[is.na(b)]<-F
+  zscores<-(-log10(p[,1]))
+  zscores[b]<-log10(p[b,2])
+  # signficiant in p[,1] will be positive
+  # signficiant in p[,2] will be negative
+  return(zscores)
+}
+
