@@ -7,59 +7,53 @@
 DIALOGUE.run(
   rA,
   main,
-  k = 2,
-  results.dir = "~/Desktop/DIALOGUE.results/",
+  k = 3,
+  results.dir = getwd(),
   plot.flag = T,
-  conf = "cellQ",
   pheno = NULL,
-  PMD2 = F
+  PMD2 = F,
+  conf = "cellQ",
+  covar = c("cellQ", "tme.qc"),
+  n.genes = 200,
+  averaging.function = colMedians,
+  p.anova = 0.05,
+  specific.pair = NULL,
+  parallel.vs = F
 )
 }
 \arguments{
 \item{rA}{list of \linkS4class{cell.type} objects.}
 
-\item{main}{results' name;}
-
-\item{k}{the number of multicellular programs (MCPs) to identify;}
+\item{k}{the number of multicellular programs to identify;}
 
 \item{results.dir}{path to the results directory, where the output will be saved;}
 
-\item{plot.flag}{if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is TRUE;}
+\item{plot.flag}{if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;}
 
-\item{conf}{(optional) the names of covariates in the multilevel model, which will be extracted from the [metadata] slot in the \linkS4class{cell.type} objects; default is ["cellQ"].}
-
-\item{pheno}{(optional) the name of the binary feature to be tested for association with the MCPs.}
+\item{add.effects}{whether to add additional covariates to the multilevel model;
+if TRUE then the covariates will extracted from the [conf] slot in the \linkS4class{cell.type} objects;
+default is FALSE.}
 }
 \value{
 A list with the following components:
 
-MCPs -  the multicellular programs, given as a list of signatures;
+sig -  the multicellular programs, given as a list of signatures;
 
 scores - the multicellular programs' scores in each cell;
 
 gene.pval - the cross-cell-type p-values of each program;
 
-pref - the correlation (R) and association (mixed-effects p-value) between the cell-type-sepcific components of each multicellular programs.
-
-phenoZ - The association of each MCP with the phenotype of interest, given as the association's direction times -log10(p-value).
+pref - the correlation (R) and association (mixed-effects p-value) between the cell-type-sepcific
+components of each multicellular programs.
 }
 \description{
 DIALOGUE is a dimensionality reduction approach that uses cross-cell-type
 associations to identify multicellular programs and map the cell transcriptome
 as a function of its environment.
 }
-\examples{
-# To run a toy example, first download
-rA<-readRDS(system.file("extdata", "toy.example.rds", package = "DIALOGUE"))
-summary(rA)
-# Find multicellular programs:
-R<-DIALOGUE.run(rA = rA,main = "toy.example",k = 2,results.dir = "~/Desktop/DIALOGUE.results/")
-}
-\references{
-Jerby-Arnon and Regev, Mapping multicellular configurations using single-cell data
-}
 \seealso{
-See \href{https://github.com/livnatje/DIALOGUE/wiki}{DIALOGUE's wiki} for more details.
+See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
+\code{\link{DIALOGUE.plot}}
 }
 \author{
 Livnat Jerby-Arnon

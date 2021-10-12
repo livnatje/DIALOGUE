@@ -4,7 +4,15 @@
 \alias{DIALOGUE.plot}
 \title{DIALOGUE.plot}
 \usage{
-DIALOGUE.plot(R, results.dir = "~/Desktop/DIALOGUE.results/", pheno = NULL)
+DIALOGUE.plot(
+  R,
+  results.dir = "~/Desktop/DIALOGUE.results/",
+  pheno = NULL,
+  mark.samples = NULL,
+  metadata = NULL,
+  d = 1,
+  MCPs = 1:R$k["DIALOGUE"]
+)
 }
 \arguments{
 \item{R}{DIALOGUE output}

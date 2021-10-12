@@ -10,7 +10,8 @@ make.cell.type(
   samples,
   X = NULL,
   metadata = NULL,
-  tpmAv = t(average.mat.rows(t(tpm), samples))
+  tpmAv = t(average.mat.rows(t(tpm), samples)),
+  cellQ
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ make.cell.type(
 \item{samples}{the sample of each cell (1xn)}
 
 \item{X}{features matrix (kxn), e.g., PCs, NMF components, tpm etc.; these features will be used to identify the multicellular programs.}
+
+\item{metadata}{cell features (rxn)}
 
 \item{cellQ}{cell quality measures, e.g., number of reads/genes detected (1xn)}
 }
