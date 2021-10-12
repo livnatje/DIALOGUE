@@ -475,8 +475,8 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
   names(R$scores)<-cell.types
   
   R$name<-paste0("DLG.output_",main)
-  R$MCPs<-sig2MCP(R$sig1)
-  R$MCPs2<-sig2MCP(R$sig2)
+  R$MCPs.full<-sig2MCP(R$sig1)
+  R$MCPs<-sig2MCP(R$sig2)
   
   R$cca.fit<-laply(R$cell.types,function(x) diag(cor(R$cca.scores[[x]],R$scores[[x]][,1:R$k["DIALOGUE"]])))
   rownames(R$cca.fit)<-R$cell.types
@@ -487,9 +487,8 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
   if(!is.null(pheno)){R$phenoZ<-DIALOGUE.pheno(R,pheno = pheno)}
   if(full.version){saveRDS(R,file = fileName)}
   
-  R1<-R[intersect(names(R),c("cell.types","scores","gene.pval","param",
+  R1<-R[intersect(names(R),c("cell.types","scores","gene.pval","param","MCP.cell.types","MCPs",
                              "pref","k","name","phenoZ",results.dir))]
-  R1$MCPs<-R$MCPs2
   fileName<-paste0(results.dir,"DLG.output_",main,".rds")
   saveRDS(R1,file = fileName)
   
