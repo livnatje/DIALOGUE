@@ -133,7 +133,7 @@ DIALOGUE.violin.pheno<-function(R,pheno = "pathology",MCPs,selected.samples,d = 
     X<-X[!is.na(X[,pheno]),]
   }
   if(!is.element("id",colnames(X))){X$id<-X$cell.type}
-  if(is.logical(X[,pheno])){X[,pheno]<-ifelse(X[,pheno],"Disease","Control")}
+  # if(is.logical(X[,pheno])){X[,pheno]<-ifelse(X[,pheno],"Disease","Control")}
   if(!missing(selected.samples)){X<-X[is.element(X$samples,selected.samples),]}
   
   par(mfrow=c(1,1),oma = c(5, 0, 0, 7))

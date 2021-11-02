@@ -440,3 +440,61 @@ get.p.zscores<-function(p){
   return(zscores)
 }
 
+t.test.groups<-function(x,b,g,min.n = 1,cut.off = NULL){
+  x<-as.matrix(x)
+  gu<-intersect(get.abundant(g[!b],min.n),get.abundant(g[b],min.n))
+  if(is.null(rownames(x))){
+    rownames(x)<-1:nrow(x)
+  }
+  v<-get.mat(rownames(x),gu)
+  for (i in 1:length(gu)){
+    b.g<-is.element(g,gu[i]);
+    v[,i]<-t.test.mat(x[,b.g],b[b.g])[,3]
+  }
+  if(!is.null(cut.off)){
+    v<-cbind.data.frame(Z.up = rowSums(v>3),Z.down = rowSums(v<(-3)),v)
+  }
+  return(v)
+}
+
+get.abundant<-function(v,abn.c = 2,boolean.flag = F,top,decreasing = T){
+  m<-as.matrix(table(v))
+  m<-as.matrix(m[order(m,decreasing = decreasing),])
+  if(!missing(top)){
+    abn.c<-m[top]
+  }
+  m<-m[m>=abn.c,]
+  abn.names<-names(m)
+  if(boolean.flag){
+    b<-is.element(v,abn.names)
+    return(b)
+  }
+  return(abn.names)
+}
+
+get.mat<-function(m.rows,m.cols,data = NA){
+  m<-matrix(data = data, nrow = length(m.rows),ncol = length(m.cols),
+            dimnames = list(m.rows,m.cols))
+  return(m)
+}
+
+my.format.pval<-function(p,prnt.flag = F,d = "="){
+  if(length(p)>1){
+    P<-laply(p,my.format.pval)
+    P<-gsub("P = ","",P)
+    # P<-paste0("P",1:length(P)," = ",P)
+    P<-paste("P =",paste(P,collapse = ", "))
+    return(P)
+  }
+  if(abs(p)>1){
+    p<-10^(-abs(p))
+  }
+  if(p>0.05){p<-paste("P",d,round(p,3));return(p)}
+  p<-gsub("e","*10",paste("P",d,format(p,scientific = T,digits= 3)))
+  p<-gsub("-0","-",p)
+  if(prnt.flag){
+    p<-paste0("(",p,")")
+  }
+  return(p)
+}
+
