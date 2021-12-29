@@ -5,7 +5,7 @@
 #' @slot cells cell identifiers (1xn);
 #' @slot tpm gene expression matrix (mxn)
 #' @slot genes genes (1xm) represented in the [tpm] matrix;
-#' @slot X features matrix (kxn), e.g., PCs, NMF components, tpm etc.
+#' @slot X features matrix (n x k), where n is the number of cells and k is the number of features, e.g., PCs, NMF components, tpm etc.
 #' @slot samples the samples corresponding to the cells in [cells] (1xn)
 #' @seealso See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
 #' \code{\link{DIALOGUE.plot}}
