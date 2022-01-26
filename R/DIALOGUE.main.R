@@ -125,7 +125,7 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
   if(is.null(specific.pair)){
     out<-DIALOGUE1.PMD(X = X,k = k,PMD2 = PMD2,extra.sparse = extra.sparse,seed1 = seed1)
     emp.p<-DIALOGUE1.PMD.empirical(X,k,n1 = 20,extra.sparse = extra.sparse)
-    View(emp.p)
+    write.csv(emp.p, paste0(results.dir,"emp.csv"))
     if(bypass.emp){
       emp.p1<-emp.p
       emp.p[]<-0.05
