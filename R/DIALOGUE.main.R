@@ -29,6 +29,7 @@ DIALOGUE.run<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno =
                        averaging.function = colMedians,p.anova = 0.05,specific.pair = NULL,
                        parallel.vs = F){
   full.version <- F
+  names(rA)<-laply(rA,function(r) r@name)
   R<-DIALOGUE1(rA = rA,k = k,main = main,
                results.dir = results.dir, PMD2 = PMD2,covar = covar,conf = conf,
                n.genes = n.genes,averaging.function = averaging.function,
