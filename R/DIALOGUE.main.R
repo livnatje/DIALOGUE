@@ -846,7 +846,12 @@ p.adjust.mat.per.label<-function(p,v){
   p1<-get.mat(rownames(p),colnames(p),data = NA)
   for(x in unique(v)){
     b<-is.element(v,x)
-    p1[b,]<-p.adjust.mat(p[b,])
+    if(ncol(p1)<2|is.null(ncol(p1))){
+      p1[b]<-p.adjust(p[b])
+    }else{
+      p1[b,]<-p.adjust.mat(p[b,])
+    }
+    
   }
   return(p1)
 }

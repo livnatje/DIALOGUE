@@ -376,6 +376,7 @@ t.test.mat<-function(m,b,two.sided=F,rankf = F,fold.changeF = F){
 }
 
 p.adjust.mat<-function(m,method = "BH"){
+  if(ncol(m)<2|is.null(ncol(m))){return(p.adjust(x,method = method))}
   P<-apply(m,2,function(x) p.adjust(x,method = method))
   return(P)
 }
