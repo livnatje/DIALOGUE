@@ -38,7 +38,7 @@ cell.type <- setClass(Class = "cell.type",
 make.cell.type<-function(name,tpm,samples,X = NULL,metadata = NULL,
                          tpmAv = t(average.mat.rows(t(tpm),samples)),
                          cellQ){
-  r<-cell.type(name = gsub("_",".",name),
+  r<-cell.type(name = gsub("_","",name),
                cells = colnames(tpm),
                genes = rownames(tpm),
                cellQ = cellQ,
