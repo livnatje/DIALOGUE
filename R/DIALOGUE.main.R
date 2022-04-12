@@ -110,6 +110,9 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
   # Finding shared samples
   samples<-unlist(lapply(cell.types, function(x) rownames(X[[x]])))
   samplesU<-get.abundant(samples,n1)
+  if(length(sampleU)<5){
+    return("Error: Cannot run DIALOGUE with less than 5 samples.")
+  }
   
   # Centering and scalling (optional)
   f<-function(X1){
@@ -125,7 +128,7 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
   
   if(is.null(specific.pair)){
     out<-DIALOGUE1.PMD(X = X,k = k,PMD2 = PMD2,extra.sparse = extra.sparse,seed1 = seed1)
-    emp.p<-DIALOGUE1.PMD.empirical(X,k,n1 = 20,extra.sparse = extra.sparse)
+    emp.p<-DIALOGUE1.PMD.empirical(X,k,n1 = 100,extra.sparse = extra.sparse)
     View(emp.p)
     if(bypass.emp){
       emp.p1<-emp.p
@@ -581,7 +584,7 @@ DLG.find.scoring<-function(r1,R){
     r1<-DLG.initialize(r1,R)
     return(r1)
   }
-  gene.pval<-gene.pval[is.element(gene.pval$genes,r1@genes),]
+  gene.pval<-gene.pval[is.element(gene.pval$genes,r1@genes)&!is.na(gene.pval[,1]),]
   g<-sort(unique(gene.pval$genes))
   
   # r1@cca.scores0<-r1@X%*%R$cca$ws[[r1@name]]
@@ -652,7 +655,8 @@ DLG.iterative.nnls<-function(X,y,gene.pval){
   idx<-idx[idx>=(1/3)]
   for(n1 in idx){
     b1<-f.rank==n1
-    if(sum(b1)<5){next()}
+    print(b1)
+    if(sum(b1,na.rm = T)<5){next()}
     X1<-X[,b1]
     main<-paste0("N",n1)
     v[[main]]<-nnls::nnls(X1,y)
@@ -664,7 +668,7 @@ DLG.iterative.nnls<-function(X,y,gene.pval){
       return(gene.pval)
     }
   }
-  if(sum(f.rank<n1)<5){return(gene.pval)}
+  if(sum(f.rank<n1,na.rm = T)<5){return(gene.pval)}
   X1<-X[,f.rank<n1]
   main<-paste0("Ns",n1)
   v[[main]]<-nnls::nnls(X1,y)
@@ -846,7 +850,7 @@ p.adjust.mat.per.label<-function(p,v){
   p1<-get.mat(rownames(p),colnames(p),data = NA)
   for(x in unique(v)){
     b<-is.element(v,x)
-    if(ncol(p1)<2|is.null(ncol(p1))){
+    if(is.null(ncol(p1))||ncol(p1)<2){
       p1[b]<-p.adjust(p[b])
     }else{
       p1[b,]<-p.adjust.mat(p[b,])
