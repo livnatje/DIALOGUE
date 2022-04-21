@@ -110,7 +110,7 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
   # Finding shared samples
   samples<-unlist(lapply(cell.types, function(x) rownames(X[[x]])))
   samplesU<-get.abundant(samples,n1)
-  if(length(sampleU)<5){
+  if(length(samplesU)<5){
     return("Error: Cannot run DIALOGUE with less than 5 samples.")
   }
   
