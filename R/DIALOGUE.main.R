@@ -654,7 +654,6 @@ DLG.iterative.nnls<-function(X,y,gene.pval){
   idx<-idx[idx>=(1/3)]
   for(n1 in idx){
     b1<-f.rank==n1
-    print(b1)
     if(sum(b1,na.rm = T)<5){next()}
     X1<-X[,b1]
     main<-paste0("N",n1)
