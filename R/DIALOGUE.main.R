@@ -27,13 +27,13 @@
 DIALOGUE.run<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno = NULL,
                        PMD2 = F,conf = "cellQ",covar = c("cellQ","tme.qc"),n.genes = 200,
                        averaging.function = colMedians,p.anova = 0.05,specific.pair = NULL,
-                       parallel.vs = F,extra.sparse = T){
+                       parallel.vs = F,center.flag = T,extra.sparse = T){
   full.version <- F
   names(rA)<-laply(rA,function(r) r@name)
   R<-DIALOGUE1(rA = rA,k = k,main = main,
                results.dir = results.dir, PMD2 = PMD2,covar = covar,conf = conf,
-               n.genes = n.genes,averaging.function = averaging.function,
-               p.anova = p.anova,specific.pair = specific.pair,extra.sparse = extra.sparse)
+               n.genes = n.genes,averaging.function = averaging.function,extra.sparse = extra.sparse,
+               p.anova = p.anova,specific.pair = specific.pair,center.flag = center.flag)
   if(R$message=="No programs"){return(R)}
   if(!is.null(specific.pair)){
     main<-paste(main,paste(specific.pair,collapse = "."),sep = "_")
