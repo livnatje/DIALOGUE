@@ -17,7 +17,7 @@ See the [tutorial](https://github.com/livnatje/DIALOGUE/wiki/Tutorial) for more 
 ### **Requirements**
 
 * R (tested in R version 3.4.0).
-* R libraries: lme4, lmerTest, PMA, plyr, matrixStats, psych, stringi, RColorBrewer, unikn, reshape2, ggplot2, grid, beanplot
+* R libraries: lme4, lmerTest, PMA, plyr, matrixStats, psych, stringi, RColorBrewer, unikn, reshape2, ggplot2, grid, beanplot, parallel
 
 # Citation
 
