@@ -50,7 +50,7 @@ make.cell.type<-function(name,tpm,samples,X = NULL,metadata = NULL,
                metadata = cbind.data.frame(cellQ = cellQ,metadata),
                extra.scores = list())
   print(paste("Cell type name:",r@name))
-  if(r@cells!=rownames(X)){
+  if(!identical(r@cells,rownames(X))){
     print("Each row in X should include the original representation of the corresponding cell.")
     print("Error: Cell ids do not match the X input.")
     return("Error: Cell ids do not match the X input.")
