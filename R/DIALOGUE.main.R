@@ -8,6 +8,8 @@
 #' @param k the number of multicellular programs to identify;
 #' @param results.dir path to the results directory, where the output will be saved;
 #' @param plot.flag if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;
+#' @param abn.c the minimal number of cells that a sample should have to be considered for MCP detection;
+#' @param spatial.flag should be TRUE if working with spatial data with small niches, and TRUE if working with single cell data or larger tissue microenvironment niches. The default value is FALSE.
 #' @param add.effects whether to add additional covariates to the multilevel model;
 #' if TRUE then the covariates will extracted from the [conf] slot in the \linkS4class{cell.type} objects;
 #' default is FALSE.
@@ -27,13 +29,14 @@
 DIALOGUE.run<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno = NULL,
                        PMD2 = F,conf = "cellQ",covar = c("cellQ","tme.qc"),n.genes = 200,
                        averaging.function = colMedians,p.anova = 0.05,specific.pair = NULL,
-                       parallel.vs = F,center.flag = T,extra.sparse = F, bypass.emp = F){
+                       parallel.vs = F,center.flag = T,extra.sparse = F, bypass.emp = F, abn.c = 15, spatial.flag = F){
   full.version <- F
   names(rA)<-laply(rA,function(r) r@name)
   R<-DIALOGUE1(rA = rA,k = k,main = main,
                results.dir = results.dir, PMD2 = PMD2,covar = covar,conf = conf,
                n.genes = n.genes,averaging.function = averaging.function,extra.sparse = extra.sparse,
-               p.anova = p.anova,specific.pair = specific.pair,center.flag = center.flag,bypass.emp = bypass.emp)
+               p.anova = p.anova,specific.pair = specific.pair,center.flag = center.flag,
+               bypass.emp = bypass.emp,abn.c = abn.c,spatial.flag = spatial.flag)
   if(R$message=="No programs"){return(R)}
   if(!is.null(specific.pair)){
     main<-paste(main,paste(specific.pair,collapse = "."),sep = "_")
@@ -91,13 +94,14 @@ DIALOGUE.pheno<-function(R,pheno =  "clin.status",cca.flag = F,rA,frm,selected.s
 DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",conf = "cellQ",
                     covar = c("cellQ","tme.qc","sex","pathology"),n.genes = 200,PMD2 = F,extra.sparse = F,
                     averaging.function = colMeans,p.anova = 0.05,specific.pair = NULL,center.flag = F,
-                    seed1 = 1234,bypass.emp = F){
+                    seed1 = 1234,bypass.emp = F,abn.c = 15,spatial.flag = F){
   
   print("#************DIALOGUE Step I: PMD ************#")
   dir.create(results.dir)
   X<-lapply(rA, function(r){
     X1<-average.mat.rows(r@X,r@samples,f = averaging.function)
-    b<-get.abundant(r@samples,abn.c = 15,boolean.flag = T)
+    if(spatial.flag){return(X1)}
+    b<-get.abundant(r@samples,abn.c = abn.c,boolean.flag = T)
     p<-p.adjust(apply.anova(X = r@X[b,],y = r@samples[b],MARGIN = 2),method = "BH")
     print(paste0(r@name,": Removing ",sum(p>p.anova)," of ",length(p)," features."))
     X1<-X1[,names(p)[p<p.anova]]
