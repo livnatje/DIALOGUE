@@ -21,6 +21,6 @@ See the [tutorial](https://github.com/livnatje/DIALOGUE/wiki/Tutorial) for more 
 
 # Citation
 
-[Jerby-Arnon & Regev. DIALOGUE maps multicellular programs in tissue from single-cell or spatial transcriptomics data. Nature Biotechnology (2022)](doi:10.1038/s41587-022-01288-0)
+[Jerby-Arnon & Regev. DIALOGUE maps multicellular programs in tissue from single-cell or spatial transcriptomics data. Nature Biotechnology (2022)](https://www.nature.com/articles/s41587-022-01288-0)
 
 
