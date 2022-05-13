@@ -32,6 +32,7 @@ DIALOGUE.run<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno =
                        parallel.vs = F,center.flag = T,extra.sparse = F, bypass.emp = F, abn.c = 15, spatial.flag = F){
   full.version <- F
   names(rA)<-laply(rA,function(r) r@name)
+  if(!grepl("\\/$", results.dir)){results.dir <- paste(results.dir, "/", sep = "")}
   R<-DIALOGUE1(rA = rA,k = k,main = main,
                results.dir = results.dir, PMD2 = PMD2,covar = covar,conf = conf,
                n.genes = n.genes,averaging.function = averaging.function,extra.sparse = extra.sparse,
@@ -97,7 +98,8 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
                     seed1 = 1234,bypass.emp = F,abn.c = 15,spatial.flag = F){
   
   print("#************DIALOGUE Step I: PMD ************#")
-  dir.create(results.dir)
+  dir.create(results.dir, show.warings=FALSE, recursive=TRUE)
+  if(!grepl("\\/$", results.dir)){results.dir <- paste(results.dir, "/", sep = "")}
   X<-lapply(rA, function(r){
     X1<-average.mat.rows(r@X,r@samples,f = averaging.function)
     if(spatial.flag){return(X1)}
@@ -200,8 +202,8 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
     R$samples.cells[[x]]<-r@samples
   }
   if(bypass.emp){R$emp.p1<-emp.p1}
-  saveRDS(R,file = paste0(results.dir,"/",R$name,".rds"))
-  dir.create(paste0(results.dir,"/DIALOGUE2_",main))
+  saveRDS(R,file = paste0(results.dir,R$name,".rds"))
+  dir.create(paste0(results.dir,"DIALOGUE2_",main))
   return(R)
 }
 
@@ -321,10 +323,11 @@ DIALOGUE1.PMD.pairwise<-function(X,k,specific.pair){
 
 DIALOGUE2<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",subsample.flag = T,parallel.vs = F){
   print("#************DIALOGUE Step II: HLM ************#")
+  if(!grepl("\\/$", results.dir)){results.dir <- paste(results.dir, "/", sep = "")}
   cell.types<-names(rA)
   if(missing(main)){main<-paste0(cell.types,collapse = "_")}
-  file1<-paste0(results.dir,"/DIALOGUE1_",main,".rds")
-  file2<-paste0(results.dir,"/DIALOGUE2_",main,".rds")
+  file1<-paste0(results.dir,"DIALOGUE1_",main,".rds")
+  file2<-paste0(results.dir,"DIALOGUE2_",main,".rds")
   
   R<-readRDS(file1)
   R$frm<-paste0("y ~ (1 | samples) + x + ",paste(R$covar,collapse = " + "))
@@ -368,7 +371,7 @@ DIALOGUE2.pair<-function(R,r1,r2,cell.types,results.dir){
   print(paste(length(MCP.names),"MCPs identified for these cell types."))
   main<-gsub("DIALOGUE1_","",R$name)
   
-  saveFile<-paste0(results.dir,"/DIALOGUE2_",main,"/",x1,".vs.",x2,".rds")
+  saveFile<-paste0(results.dir,"DIALOGUE2_",main,"/",x1,".vs.",x2,".rds")
   if(file.exists(saveFile)){
     return(readRDS(saveFile))
   }
