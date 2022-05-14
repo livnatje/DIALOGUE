@@ -2,11 +2,11 @@
 
 DIALOGUE is a dimensionality reduction method that uses cross-cell-type associations to identify multicellular programs (MCPs) and map the cell transcriptome as a function of its environment. Given single-cell data, it combines penalized matrix decomposition with multilevel modeling to identify generalizable MCPs and examines their association with specific phenotypes of interest.
 
-<img src="https://github.com/livnatje/DIALOGUE/blob/master/Images/DIALOGUE_overview.png" width=900 />
+<img src="https://github.com/livnatje/DIALOGUE/blob/master/Images/Livnat_dialogue_rev3-02.png" width=600 />
 
 # **Quick start**
 
-To install DIALOGUE you can either use [```devtools::install_github("DIALOGUE",username)```](https://www.rdocumentation.org/packages/devtools/versions/1.13.6/topics/install_github) or just download its R package and use ```devtools::install("DIALOGUE")```
+To install DIALOGUE you can either use [```devtools::install_github(repo = "https://github.com/livnatje/DIALOGUE")```](https://www.rdocumentation.org/packages/devtools/versions/1.13.6/topics/install_github) or just download its R package and use ```devtools::install("DIALOGUE")```
 
 The **input** consistes of single-cell transcriptomes of different cell types, usually together with a more compact representation (e.g., PCs). The **output** will be multicellular programs (MCPs) of co-regulated genes across the different cell types, their expression across the cells, and association with specific phenotype(s) of interest. Each MCP consists of multiple cell-type-specific gene subsets.
 
@@ -21,5 +21,6 @@ See the [tutorial](https://github.com/livnatje/DIALOGUE/wiki/Tutorial) for more 
 
 # Citation
 
-Jerby-Arnon and Regev. Mapping multicellular programs from single-cell profiles. _bioRxiv_ (2020).
+[Jerby-Arnon & Regev. DIALOGUE maps multicellular programs in tissue from single-cell or spatial transcriptomics data. _**Nature Biotechnology**_ (2022)](https://www.nature.com/articles/s41587-022-01288-0)
+
 
