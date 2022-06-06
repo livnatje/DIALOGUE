@@ -185,9 +185,6 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
     conf.m<-r@metadata[,is.element(colnames(r@metadata),conf)]
     r@scores<-t(get.residuals(t(scores0),conf.m))
     R$cca.scores[[x]]<-r@scores
-    # R$cca.gene.cor[[x]]<-cor(t(r@tpm),r@scores)
-    # R$cca.sig[[x]]<-get.top.cor(R$cca.gene.cor[[x]],q = n.genes,min.ci = 0.05)
-    
     R$cca.gene.cor1[[x]]<-cor(t(r@tpm),r@scores)
     g1<-sort(unique(unlist(get.top.cor(R$cca.gene.cor1[[x]],q = n.genes,min.ci = 0.05))))
     R$cca.gene.cor[[x]]<-pcor.mat(t(r@tpm[g1,]),r@scores,r@cellQ)
@@ -195,7 +192,6 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
     P1<-R$cca.gene.cor[[x]]$P
     C1[P1>(0.05/nrow(r@tpm))]<-0
     R$cca.sig[[x]]<-get.top.cor(C1,q = n.genes,min.ci = 0.05)
-    
     R$cca.redun.cor[[x]]<-cor(r@scores[,1:k])
     R$samples.cells[[x]]<-r@samples
   }
@@ -495,7 +491,7 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
   if(full.version){saveRDS(R,file = fileName)}
   
   R1<-R[intersect(names(R),c("cell.types","scores","gene.pval","param","MCP.cell.types","MCPs",
-                             "pref","k","name","phenoZ",results.dir))]
+                             "emp.p","pref","k","name","phenoZ",results.dir))]
   fileName<-paste0(results.dir,"DLG.output_",main,".rds")
   saveRDS(R1,file = fileName)
   
