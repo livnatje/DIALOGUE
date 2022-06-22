@@ -871,3 +871,54 @@ generic.vector2mat<-function(v,rn = get.strsplit(names(v),"_",1),cn = get.strspl
   return(m)
 }
 
+DIALOGUE.pheno.non.binary<-function(R,pheno =  "clin.status",cca.flag = F,rA,frm,selected.samples = NULL){
+  k<-R$k["DIALOGUE"]
+  
+  if(missing(frm)){
+    if(is.null(R$frm)){
+      print("Adding formula based on the input covariates")
+      R$frm<-paste0("y ~ (1 | samples) + x + ",paste(R$param$covar,collapse = " + "))
+    }
+    frm<-gsub("+tme.qc","",R$frm,fixed = T)
+    frm<-gsub("+ tme.qc","",frm,fixed = T)
+    frm<-gsub(paste0("+",pheno),"",frm,fixed = T)
+    frm<-gsub(paste0("+ ",pheno),"",frm,fixed = T)
+    print(paste("HLM formula:",frm))
+  }
+  
+  f<-function(X){
+    covar<-setdiff(R$param$covar,"tme.qc")
+    r1<-lapply(covar, function(x) X[,x])
+    names(r1)<-covar
+    r1$pheno<-X[,pheno]
+    # if(!is.logical(r1$pheno)){r1$pheno<-r1$pheno==sort(unique(r1$pheno))[1]}
+    r1<-c(r1,list(scores = as.matrix(X[,1:k]),samples = X$samples))
+    if(any(is.na(r1$pheno))){
+      print(paste("Identified",sum(is.na(r1$pheno)),"cells with no phenotype."))
+      r1<-set.list(r1,!is.na(r1$pheno))
+    }
+    if(!is.null(selected.samples)){
+      r1<-set.list(r1,is.element(r1$samples,selected.samples))
+    }
+    z<-apply.formula.all.HLM(r = r1,Y = r1$scores, X = r1$pheno,
+                             MARGIN = 2,formula = frm)
+    return(z)
+  }
+  if(cca.flag){
+    if(is.null(R$metadata)){R<-DLG.add.metadata(R,rA = rA)}
+    R$scores<-lapply(R$cell.types, function(x) cbind.data.frame(R$cca.scores[[x]],R$metadata[[x]]))
+    names(R$scores)<-R$cell.types
+  }
+  Z<-lapply(R$scores,f)
+  X<-NULL;for(x in R$scores){X<-rbind(X,x)}
+  R$covar<-c(R$covar,"cell.type")
+  Z$All<-f(X)
+  Za<-NULL
+  for(x in colnames(Z[[1]])[-1]){
+    Z1<-laply(Z,function(X1) X1[,x])
+    rownames(Z1)<-names(Z)
+    colnames(Z1)<-paste(colnames(Z1),x,sep = "_")
+    Za<-cbind(Za,Z1)
+  }
+  return(Za)
+}

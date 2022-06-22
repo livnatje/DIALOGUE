@@ -499,3 +499,20 @@ my.format.pval<-function(p,prnt.flag = F,d = "="){
   return(p)
 }
 
+apply.formula.all.HLM<-function(r,X,Y,MARGIN = 1,formula = "y ~ (1 | samples) + x",ttest.flag = F){
+  if(is.matrix(Y)){
+    m<-t(apply(Y,MARGIN = MARGIN,function(y){
+      P<-formula.HLM(y,X,r,formula = formula,return.all = T)
+      Z<-get.cor.zscores(P[,"Estimate"],P[,"Pr(>|t|)"])
+      return(Z)
+    }))
+  }else{
+    m<-t(apply(X,MARGIN = MARGIN,function(x){
+      P<-formula.HLM(Y,x,r,formula = formula,return.all = T)
+      Z<-get.cor.zscores(P[,"Estimate"],P[,"Pr(>|t|)"])
+      return(Z)
+    }))
+  }
+  return(m)
+}
+
