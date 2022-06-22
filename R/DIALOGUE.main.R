@@ -871,7 +871,7 @@ generic.vector2mat<-function(v,rn = get.strsplit(names(v),"_",1),cn = get.strspl
   return(m)
 }
 
-DIALOGUE.pheno.non.binary<-function(R,pheno =  "clin.status",cca.flag = F,rA,frm,selected.samples = NULL){
+DIALOGUE.pheno.multiclass<-function(R,pheno =  "clin.status",cca.flag = F,rA,frm,selected.samples = NULL){
   k<-R$k["DIALOGUE"]
   
   if(missing(frm)){
