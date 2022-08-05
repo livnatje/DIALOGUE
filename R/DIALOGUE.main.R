@@ -106,6 +106,7 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
     print(paste0(r@name,": Removing ",sum(p>p.anova)," of ",length(p)," features."))
     if(sum(p<p.anova)<5){
       err.message<-paste("Only",sum(p<p.anova),r@name,"features passed the ANOVA filter. Rerun without",r@name)
+      err.message<-paste(err.message,"\n","Make sure the data includes at least 10 samples where all cell types appear.")
       stop(err.message)}
     X1<-X1[,names(p)[p<p.anova]]
     return(X1)
