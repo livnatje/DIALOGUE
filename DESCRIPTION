@@ -11,5 +11,5 @@ Description: Given single-cell data that was obtained across different spatial l
 License: Free to use! Please cite our paper (Jerby-Arnon and Regev, 2020)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Depends: lme4, lmerTest, PMA, plyr, matrixStats, psych, stringi, RColorBrewer, unikn, reshape2, ggplot2, ppcor, Hmisc, grid

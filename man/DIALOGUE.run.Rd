@@ -18,7 +18,12 @@ DIALOGUE.run(
   averaging.function = colMedians,
   p.anova = 0.05,
   specific.pair = NULL,
-  parallel.vs = F
+  parallel.vs = F,
+  center.flag = T,
+  extra.sparse = F,
+  bypass.emp = F,
+  abn.c = 15,
+  spatial.flag = F
 )
 }
 \arguments{
@@ -29,6 +34,10 @@ DIALOGUE.run(
 \item{results.dir}{path to the results directory, where the output will be saved;}
 
 \item{plot.flag}{if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;}
+
+\item{abn.c}{the minimal number of cells that a sample should have to be considered for MCP detection;}
+
+\item{spatial.flag}{should be TRUE if working with spatial data with small niches, and TRUE if working with single cell data or larger tissue microenvironment niches. The default value is FALSE.}
 
 \item{add.effects}{whether to add additional covariates to the multilevel model;
 if TRUE then the covariates will extracted from the [conf] slot in the \linkS4class{cell.type} objects;
@@ -48,7 +57,7 @@ components of each multicellular programs.
 }
 \description{
 DIALOGUE is a dimensionality reduction approach that uses cross-cell-type
-associations to identify multicellular programs and map the cell transcriptome
+associations to identify multicellular programs (MCPs) and map the cell transcriptome
 as a function of its environment.
 }
 \seealso{

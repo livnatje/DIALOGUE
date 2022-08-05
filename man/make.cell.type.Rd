@@ -17,15 +17,15 @@ make.cell.type(
 \arguments{
 \item{name}{cell type name}
 
-\item{tpm}{gene expression or any type of single-cell profiling (mxn)}
+\item{tpm}{gene expression or any type of single-cell profiling (m x n)}
 
-\item{samples}{the sample of each cell (1xn)}
+\item{samples}{the sample of each cell (n x 1)}
 
-\item{X}{features matrix (kxn), e.g., PCs, NMF components, tpm etc.; these features will be used to identify the multicellular programs.}
+\item{X}{features matrix (n x k), e.g., PCs, NMF components, tpm etc.; these features will be used to identify the multicellular programs.}
 
-\item{metadata}{cell features (rxn)}
+\item{metadata}{cell features (n x r)}
 
-\item{cellQ}{cell quality measures, e.g., number of reads/genes detected (1xn)}
+\item{cellQ}{cell quality measures, e.g., number of reads/genes detected (n x 1)}
 }
 \description{
 This function generates a \linkS4class{cell.type} object for DIALOGUE.

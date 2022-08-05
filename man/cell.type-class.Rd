@@ -13,15 +13,15 @@ An S4 class that represents a subset of cells (for example, a particular cell ty
 \describe{
 \item{\code{name}}{cell type name;}
 
-\item{\code{cells}}{cell identifiers (1xn);}
+\item{\code{cells}}{cell identifiers (n x 1);}
 
-\item{\code{tpm}}{gene expression matrix (mxn)}
+\item{\code{tpm}}{gene expression matrix (m x n)}
 
-\item{\code{genes}}{genes (1xm) represented in the [tpm] matrix;}
+\item{\code{genes}}{genes (m x 1) represented in the [tpm] matrix;}
 
-\item{\code{X}}{features matrix (kxn), e.g., PCs, NMF components, tpm etc.}
+\item{\code{X}}{features matrix (n x k), where n is the number of cells and k is the number of features, e.g., PCs, NMF components, tpm etc.}
 
-\item{\code{samples}}{the samples corresponding to the cells in [cells] (1xn)}
+\item{\code{samples}}{the samples corresponding to the cells in [cells] (n x 1)}
 }}
 
 \seealso{
