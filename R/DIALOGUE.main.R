@@ -104,6 +104,9 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
     b<-get.abundant(r@samples,abn.c = abn.c,boolean.flag = T)
     p<-p.adjust(apply.anova(X = r@X[b,],y = r@samples[b],MARGIN = 2),method = "BH")
     print(paste0(r@name,": Removing ",sum(p>p.anova)," of ",length(p)," features."))
+    if(sum(p<p.anova)<5){
+      err.message<-paste("Only",sum(p<p.anova),r@name,"features passed the ANOVA filter. Rerun without",r@name)
+      stop(err.message)}
     X1<-X1[,names(p)[p<p.anova]]
     return(X1)
   })
@@ -115,7 +118,7 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
   samples<-unlist(lapply(cell.types, function(x) rownames(X[[x]])))
   samplesU<-get.abundant(samples,n1)
   if(length(samplesU)<5){
-    return("Error: Cannot run DIALOGUE with less than 5 samples.")
+    stop("Cannot run DIALOGUE with less than 5 samples.")
   }
   
   # Centering and scalling (optional)
