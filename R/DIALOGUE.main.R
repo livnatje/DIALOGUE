@@ -1,7 +1,7 @@
 #' DIALOGUE.run
 #'
 #' DIALOGUE is a dimensionality reduction approach that uses cross-cell-type
-#' associations to identify multicellular programs and map the cell transcriptome
+#' associations to identify multicellular programs (MCPs) and map the cell transcriptome
 #' as a function of its environment. 
 #' 
 #' @param rA list of \linkS4class{cell.type} objects.
