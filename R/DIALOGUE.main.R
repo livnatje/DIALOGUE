@@ -495,7 +495,7 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
   if(!is.null(pheno)){R$phenoZ<-DIALOGUE.pheno(R,pheno = pheno)}
   if(full.version){saveRDS(R,file = fileName)}
   
-  R1<-R[intersect(names(R),c("cell.types","scores","gene.pval","param","MCP.cell.types","MCPs",
+  R1<-R[intersect(names(R),c("cell.types","scores","gene.pval","param","MCP.cell.types","MCPs","MCPs.full",
                              "emp.p","pref","k","name","phenoZ",results.dir))]
   fileName<-paste0(results.dir,"DLG.output_",main,".rds")
   saveRDS(R1,file = fileName)
@@ -630,7 +630,7 @@ DLG.find.scoring<-function(r1,R){
   names(idx)<-names(R$MCP.cell.types)
   m1$n.cells<-idx[m1$program]
   lb<-ceil(m1$n.cells/2)
-  m1<-m1[m1$coef>0|(m1$n.up>=lb&m1$p.up<0.05)|(m1$n.down>=lb&m1$p.down<0.05),]
+  m1<-m1[m1$coef>0|(m1$n.up>=lb&m1$p.up<1e-3)|(m1$n.down>=lb&m1$p.down<1e-3),]
   m2<-m2[m2$Nf==1&(m2$p.up<0.05|m2$p.down<0.05),]
   r1@sig<-list(sig1 = split(m1$genes,m1$programF),sig2 = split(m2$genes,m2$programF))
   return(r1)
@@ -788,6 +788,10 @@ sig2MCP<-function(R.sig,k = 5){
     idx<-paste0("MCP",x,".")
     sig1<-sig1[grepl(idx,names(sig1))]
     names(sig1)<-gsub(idx,"",names(sig1))
+    if(length(unique(get.strsplit(names(sig1),".",1)))<2){
+      print(paste0("Removing MCP",x))
+      return(NULL)
+    }
     return(sig1)
   })
   names(MCPs)<-paste0("MCP",1:k)

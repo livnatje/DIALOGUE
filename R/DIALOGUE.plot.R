@@ -79,6 +79,7 @@ DIALOGUE.plot.av<-function(R,MCPs,mark.samples = NULL,d = 1,k = R$k["DIALOGUE"],
 }
 
 DIALOGUE.plot.sig.comp<-function(R,main = ""){
+  R$MCPs<-R$MCPs[laply(R$MCPs,length)>1]
   genes<-unique(sort(unlist(R$MCPs)))
   f<-function(sig1,d = 1){
     if(d==1){
