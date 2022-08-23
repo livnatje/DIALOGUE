@@ -1,0 +1,64 @@
+---
+title: "Toy example: Running DIALOGUE with Seurat object"
+output: html_notebook
+---
+
+Here we will show how to run [DIALOGUE](https://www.nature.com/articles/s41587-022-01288-0) with a Seurat object, using the [PBMC dataset](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html).
+
+First, we will download the PBMC data and simulate a toy example.
+
+```{r}
+  obj<-DIALOGUE_example.initialize(installation.flag = F)
+```
+
+Note that we always need to have a cell subtype information in the meta.data field. This information will be used to subset the data per cell type.
+
+```{r}
+  obj@meta.data$cell.subtypes<-obj@meta.data$seurat_annotations
+```
+
+We also always need to have sample information in the meta.data field. Note that this is not real sample information, but is just generated for this example.
+
+```{r}
+  obj@meta.data$samples <- sample(c(paste0("sample",1:25)), size = ncol(pbmc3k), replace =TRUE)
+  b1<-is.element(obj@meta.data$cell.subtypes,c("Naive CD4 T","CD14+ Mono"))
+  b2<-is.element(obj@meta.data$cell.subtypes,c("Memory CD4 T","FCGR3A+ Mono"))
+  b3<-is.element(obj@meta.data$cell.subtypes,c("CD8 T","DC"))
+  obj@meta.data$samples[b1] <- sample(c(paste0("sample",1:10)), size = sum(b1), replace =TRUE)
+  obj@meta.data$samples[b2] <- sample(c(paste0("sample",11:20)), size = sum(b2), replace =TRUE)
+  obj@meta.data$samples[b3] <- sample(c(paste0("sample",21:25)), size = sum(b3), replace =TRUE)
+```
+
+Next we will generate cell type specific objects compatible with DIALOGUE and will run DIALOGUE to identify MCPs spanning T cells and meyloid cells.
+
+```{r}
+  r1<- DIALOGUE_make.cell.type.seurat(obj, cell.subtypes = c("Naive CD4 T","Memory CD4 T","CD8 T"), name = "Tcell")
+  r2<- DIALOGUE_make.cell.type.seurat(obj, cell.subtypes = c("CD14+ Mono","FCGR3A+ Mono","DC"), name = "Myeloid")
+  
+  rA<- list(Tcell = r1,Myeloid = r2)
+  
+  results.dir<-getwd()
+  R <- DIALOGUE.run(rA = rA, # list of cell.type objects
+                    main = "ToyExample",
+                    k = 3, # number of MCPs to identify
+                    results.dir = results.dir,
+                    spatial.flag = F,
+                    conf = "cellQ")# any potential confounders DIALOGUE needs to account for; default is "cellQ" 
+```
+
+Because of the way we simulated the data, we can see that the MCPs in this case mark specific cell subtypes, as expected.
+
+```{r}
+  par(mfrow=c(1,2),oma = c(8, 1, 0, 5),xpd = T)
+  # MCP1 marks CD8 T cells and DCs
+  boxplot(R$scores$Tcell$MCP1~R$scores$Tcell$cell.subtypes,xlab = "",ylab = "MCP1",las=2)
+  boxplot(R$scores$Myeloid$MCP1~R$scores$Myeloid$cell.subtypes,xlab = "",ylab = "MCP1",las=2)
+  # MCP2 marks memory CD4 T cells and FCGR3A+ Mono
+  boxplot(-R$scores$Tcell$MCP2~R$scores$Tcell$cell.subtypes,xlab = "",ylab = "MCP2",las=2)
+  boxplot(-R$scores$Myeloid$MCP2~R$scores$Myeloid$cell.subtypes,xlab = "",ylab = "MCP2",las=2)
+  # MCP3 marks naive CD4 T cells and CD14+ Mono
+  boxplot(-R$scores$Tcell$MCP3~R$scores$Tcell$cell.subtypes,xlab = "",ylab = "MCP3",las=2)
+  boxplot(-R$scores$Myeloid$MCP3~R$scores$Myeloid$cell.subtypes,xlab = "",ylab = "MCP3",las=2)
+```
+
+
