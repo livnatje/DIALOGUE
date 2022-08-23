@@ -23,4 +23,5 @@ See the [tutorial](https://github.com/livnatje/DIALOGUE/wiki/Tutorial) for more 
 
 [Jerby-Arnon & Regev. DIALOGUE maps multicellular programs in tissue from single-cell or spatial transcriptomics data. _**Nature Biotechnology**_ 2022](https://www.nature.com/articles/s41587-022-01288-0).
 
-
+**Want to hear more about DIALOGUE and other approaches to study multicellular biology?** Checkout our [seminar at 
+BCH Digital Science TV](https://www.youtube.com/watch?v=iBtzD0rKSdM&list=PLZH5lNty_E1pHu2cQY83tDYDCyhJFOd7a&index=2&t=2964s)
