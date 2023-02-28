@@ -39,8 +39,8 @@ DIALOGUE_SeuratExample<-function(results.dir){
   
   par(mfrow=c(1,2),oma = c(8, 1, 0, 5),xpd = T)
   # MCP1 marks CD8 T cells and DCs
-  boxplot(R$scores$A$MCP1~R$scores$A$cell.subtypes,xlab = "",ylab = "MCP1",las=2)
-  boxplot(R$scores$B$MCP1~R$scores$B$cell.subtypes,xlab = "",ylab = "MCP1",las=2)
+  boxplot(-R$scores$A$MCP1~R$scores$A$cell.subtypes,xlab = "",ylab = "MCP1",las=2)
+  boxplot(-R$scores$B$MCP1~R$scores$B$cell.subtypes,xlab = "",ylab = "MCP1",las=2)
   return(R)
   
 }
