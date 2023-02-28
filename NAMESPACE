@@ -2,5 +2,8 @@
 
 export(DIALOGUE.plot)
 export(DIALOGUE.run)
+export(DIALOGUE_SeuratExample)
+export(DIALOGUE_make.cell.type.seurat)
+export(cell.type)
 export(make.cell.type)
 exportClasses(cell.type)

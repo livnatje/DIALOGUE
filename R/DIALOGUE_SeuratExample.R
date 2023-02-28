@@ -1,9 +1,12 @@
 #' DIALOGUE_SeuratExample
+#' 
 #' Using Seurat objects as input for DIALOGUE
 #' @param results.dir path to the directory for saving the output.
+#' 
 #' @examples
 #' # Run DIALOGUE with simulated PBMC data
 #' R<-DIALOGUE_SeuratExample(results.dir = "DIALOGUE.output")
+#' 
 #' @export
 
 DIALOGUE_SeuratExample<-function(results.dir){
@@ -62,6 +65,7 @@ DIALOGUE_example.initialize<-function(installation.flag){
 }
 
 #' DIALOGUE_make.cell.type.seurat
+#' 
 #' Using Seurat objects as input for DIALOGUE make.cell.type function
 #' @param obj Seurat object
 #' @param cell.subtypes the cell type or subtype to be use. Make sure the obj metadata includes a column of "cell.subtypes"
@@ -75,7 +79,7 @@ DIALOGUE_example.initialize<-function(installation.flag){
 #' rA<- list(A = r1,B = r2)
 #' R <- DIALOGUE.run(rA = rA, main = "ToyExample",k = 2, results.dir = "DIALOGUE.output",spatial.flag = F,plot.flag = T,conf = "cellQ")
 #'
-#'#' @export
+#' @export
 
 DIALOGUE_make.cell.type.seurat<- function(obj, cell.subtypes, name){
   # Given a Seurat object with "cell.subtypes" and "samples" information provided in the meta.data field
