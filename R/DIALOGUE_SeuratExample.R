@@ -13,7 +13,7 @@ DIALOGUE_SeuratExample<-function(results.dir){
   set.seed(123)
   # Simulating data based on Seurat object of PBMCs
   obj<-DIALOGUE_example.initialize(installation.flag = F)
-  obj@meta.data$samples <- sample(c(paste0("sample",1:20)), size = ncol(pbmc3k), replace =TRUE)
+  obj@meta.data$samples <- sample(c(paste0("sample",1:16)), size = ncol(pbmc3k), replace =TRUE)
   obj@meta.data$cell.subtypes<-obj@meta.data$seurat_annotations
   
   b1<-is.element(obj@meta.data$cell.subtypes,c("Naive CD4 T","CD14+ Mono"))
@@ -23,7 +23,7 @@ DIALOGUE_SeuratExample<-function(results.dir){
   obj@meta.data$samples[b1] <- sample(c(paste0("sample",1:5)), size = sum(b1), replace =TRUE)
   obj@meta.data$samples[b2] <- sample(c(paste0("sample",6:10)), size = sum(b2), replace =TRUE)
   obj@meta.data$samples[b3] <- sample(c(paste0("sample",11:12)), size = sum(b3), replace =TRUE)
-  obj@meta.data$samples[b4] <- sample(c(paste0("sample",13:14)), size = sum(b4), replace =TRUE)
+  obj@meta.data$samples[b4] <- sample(c(paste0("sample",13:16)), size = sum(b4), replace =TRUE)
   
   r1<- DIALOGUE_make.cell.type.seurat(obj, cell.subtypes = c("Naive CD4 T","Memory CD4 T","CD8 T","NK"), name = "A")
   r2<- DIALOGUE_make.cell.type.seurat(obj, cell.subtypes = c("CD14+ Mono","FCGR3A+ Mono","DC","B"), name = "B")
@@ -41,8 +41,8 @@ DIALOGUE_SeuratExample<-function(results.dir){
   
   par(mfrow=c(1,2),oma = c(8, 1, 0, 5),xpd = T)
   # MCP1 marks CD8 T cells and DCs
-  boxplot(-R$scores$A$MCP1~R$scores$A$cell.subtypes,xlab = "",ylab = "MCP1",las=2)
-  boxplot(-R$scores$B$MCP1~R$scores$B$cell.subtypes,xlab = "",ylab = "MCP1",las=2)
+  boxplot(R$scores$A$MCP1~R$scores$A$cell.subtypes,xlab = "",ylab = "MCP1",las=2)
+  boxplot(R$scores$B$MCP1~R$scores$B$cell.subtypes,xlab = "",ylab = "MCP1",las=2)
   par(mfrow=c(1,2),oma = c(8, 1, 0, 5),xpd = T)
   # MCP2 marks NK cells and B cells
   boxplot(R$scores$A$MCP2~R$scores$A$cell.subtypes,xlab = "",ylab = "MCP2",las=2)
