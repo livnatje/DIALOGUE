@@ -104,10 +104,10 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
     b<-get.abundant(r@samples,abn.c = abn.c,boolean.flag = T)
     p<-p.adjust(apply.anova(X = r@X[b,],y = r@samples[b],MARGIN = 2),method = "BH")
     print(paste0(r@name,": Removing ",sum(p>p.anova)," of ",length(p)," features."))
-    if(sum(p<p.anova)<3){
+    if(sum(p<p.anova)<5){
       err.message1<-paste("Only",sum(p<p.anova),r@name,"features passed the ANOVA filter. Try rerunning without",r@name)
-      err.message2<-"Make sure the data includes at least 5 samples where all cell types are well represented."
-      print(err.message1);print(err.message2)
+      #err.message2<-"Make sure the data includes at least 5 samples where all cell types are well represented."
+      print(err.message1);#print(err.message2)
       stop(err.message1)}
     X1<-X1[,names(p)[p<p.anova]]
     return(X1)
