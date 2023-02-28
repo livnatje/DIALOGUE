@@ -10,7 +10,7 @@ To install DIALOGUE you can either use [```devtools::install_github(repo = "http
 
 The **input** consistes of single-cell transcriptomes of different cell types, usually together with a more compact representation (e.g., PCs). The **output** will be multicellular programs (MCPs) of co-regulated genes across the different cell types, their expression across the cells, and association with specific phenotype(s) of interest. Each MCP consists of multiple cell-type-specific gene subsets.
 
-For specific cell-cell "interactions" you can run the pairwise version, using the data of two cell types of interest as input. DIALOGUE can also identify MCPs that span multiple cell types (as we show in our pre-print **_Jerby-Arnon and Regev bioRxiv 2020_**).
+For specific cell-cell "interactions" you can run the pairwise version, using the data of two cell types of interest as input. DIALOGUE can also identify MCPs that span multiple cell types (see **_Jerby-Arnon and Regev Nature Biotechnology 2022_**).
 
 See the [tutorial](https://github.com/livnatje/DIALOGUE/wiki/Tutorial) for more details.
 
