@@ -35,9 +35,7 @@ DIALOGUE_SeuratExample<-function(results.dir){
                     k = 2, # number of MCPs to identify
                     results.dir = results.dir,
                     spatial.flag = F,plot.flag = T,
-                    conf = "cellQ")# any potential confounders DIALOGUE needs to account for; default is "cellQ" 
-  
-  DIALOGUE.plot(R, results.dir = results.dir, pheno = NULL,d = 2)
+                    conf = "cellQ")
   
   par(mfrow=c(1,2),oma = c(8, 1, 0, 5),xpd = T)
   # MCP1 marks CD8 T cells and DCs
