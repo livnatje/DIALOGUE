@@ -28,7 +28,7 @@
 
 DIALOGUE.run<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno = NULL,
                        PMD2 = F,conf = "cellQ",covar = c("cellQ","tme.qc"),n.genes = 200,
-                       averaging.function = colMedians,p.anova = 0.05,specific.pair = NULL,
+                       averaging.function = colMedians,p.anova = 0.05,specific.pair = NULL,find.genes = T,
                        parallel.vs = F,center.flag = T,extra.sparse = F, bypass.emp = F, abn.c = 15, spatial.flag = F){
   full.version <- F
   names(rA)<-laply(rA,function(r) r@name)
@@ -38,6 +38,7 @@ DIALOGUE.run<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno =
                p.anova = p.anova,specific.pair = specific.pair,center.flag = center.flag,
                bypass.emp = bypass.emp,abn.c = abn.c,spatial.flag = spatial.flag)
   if(R$message=="No programs"){return(R)}
+  if(!find.genes){return(R)}
   if(!is.null(specific.pair)){
     main<-paste(main,paste(specific.pair,collapse = "."),sep = "_")
     rA<-rA[specific.pair]
