@@ -99,6 +99,11 @@ DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",co
   print("#************DIALOGUE Step I: PMD ************#")
   dir.create(results.dir)
   X<-lapply(rA, function(r){
+    if(!is.null(r@extra.scores$XAv)){
+      print("Using previous sample-level computations")
+      X1<-r@extra.scores$XAv
+      return(X1)
+    }
     X1<-average.mat.rows(r@X,r@samples,f = averaging.function)
     if(spatial.flag){return(X1)}
     b<-get.abundant(r@samples,abn.c = abn.c,boolean.flag = T)
