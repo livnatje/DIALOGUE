@@ -30,7 +30,6 @@ DIALOGUE.run<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno =
                        PMD2 = F,conf = "cellQ",covar = c("cellQ","tme.qc"),n.genes = 200,
                        averaging.function = colMedians,p.anova = 0.05,specific.pair = NULL,find.genes = T,
                        parallel.vs = F,center.flag = T,extra.sparse = F, bypass.emp = F, abn.c = 15, spatial.flag = F){
-  full.version <- F
   names(rA)<-laply(rA,function(r) r@name)
   R<-DIALOGUE1(rA = rA,k = k,main = main,
                results.dir = results.dir, PMD2 = PMD2,covar = covar,conf = conf,
@@ -496,7 +495,7 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
   rownames(R$cca.fit)<-R$cell.types
   
   fileName<-paste0(results.dir,"DLG.full.output_",main,".rds")
-  # if(full.version){saveRDS(R,file = fileName)}
+  if(full.version){saveRDS(R,file = fileName)}
   
   if(!is.null(pheno)){R$phenoZ<-DIALOGUE.pheno(R,pheno = pheno)}
   if(full.version){saveRDS(R,file = fileName)}
