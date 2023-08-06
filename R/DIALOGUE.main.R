@@ -22,7 +22,7 @@
 #' components of each multicellular programs.
 #' @seealso See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
 #' \code{\link{DIALOGUE.plot}}
-#' @author Livnat Jerby-Arnon
+#' @author Livnat Jerby
 #' @export
 #' 
 
