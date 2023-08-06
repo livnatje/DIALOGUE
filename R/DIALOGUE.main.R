@@ -26,10 +26,74 @@
 #' @export
 #' 
 
-DIALOGUE.run<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno = NULL,full.version = T,
-                       PMD2 = F,conf = "cellQ",covar = c("cellQ","tme.qc"),n.genes = 200,
-                       averaging.function = colMedians,p.anova = 0.05,specific.pair = NULL,find.genes = T,
-                       parallel.vs = F,center.flag = T,extra.sparse = F, bypass.emp = F, abn.c = 15, spatial.flag = F){
+DIALOGUE.run<-function(rA,main,param){
+  full.version <- T
+  names(rA)<-laply(rA,function(r) r@name)
+  R<-DIALOGUE1(rA = rA,main = main,param = param)
+  if(R$message=="No programs"){return(R)}
+  if(!param$find.genes){return(R)}
+  if(!is.null(param$specific.pair)){
+    main<-paste(main,paste(param$specific.pair,collapse = "."),sep = "_")
+    rA<-rA[param$specific.pair]
+  }
+  R<-DIALOGUE2(rA = rA,main = main,results.dir = param$results.dir,parallel.vs = param$parallel.vs)
+  R<-DIALOGUE3(rA = rA,main = main,results.dir = param$results.dir,full.version = param$full.version,pheno = param$pheno)
+  if(plot.flag){
+    DIALOGUE.plot(R,results.dir = param$results.dir,pheno = param$pheno)
+  }
+  return(R)
+}
+
+#' DLG.get.param
+#'
+#' DIALOGUE is a dimensionality reduction approach that uses cross-cell-type
+#' associations to identify multicellular programs (MCPs) and map the cell transcriptome
+#' as a function of its environment. 
+#' 
+#' @param k the number of multicellular programs to identify;
+#' @param results.dir path to the results directory, where the output will be saved;
+#' @param plot.flag if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;
+#' @param abn.c the minimal number of cells that a sample should have to be considered for MCP detection;
+#' @param spatial.flag should be TRUE if working with spatial data with small niches, and TRUE if working with single cell data or larger tissue microenvironment niches. The default value is FALSE.
+#' 
+#' @return A list with the parameters as input for DIALOGUE.run
+#' @seealso See \href{https://github.com/livnatje/DIALOGUE}{DIALOGUE GitHub page} for more details.
+#' \code{\link{DIALOGUE.plot}}
+#' @author Livnat Jerby
+#' @export
+#' 
+
+DLG.get.param<-function(k = 2,results.dir = DLG.file("/Results/MCPs/"),
+                        seed1 = 1234,plot.flag = F,penalty = NULL,MCP.cell.types = NULL,frm = NULL,
+                        pheno = NULL,PMD2 = F,single.BH = F,extra.sparse = F,abn.c = 15,
+                        conf = "cellQ",covar = c("cellQ","tme.qc"),n.genes = 200,
+                        averaging.function = colMedians,p.anova = 0.05,find.genes = T,
+                        specific.pair = NULL,center.flag = T,bypass.emp = F,
+                        parallel.vs = F,spatial.flag = F,full.version = T){
+  param<-list(k = k,seed1 = seed1,abn.c = abn.c,find.genes = find.genes,
+              penalty = penalty,
+              MCP.cell.types = MCP.cell.types,
+              results.dir = results.dir,
+              plot.flag = plot.flag,
+              pheno = pheno,
+              PMD2 = PMD2,
+              conf = conf,covar = covar,frm = frm,
+              n.genes = n.genes,
+              single.BH = single.BH,bypass.emp = bypass.emp,
+              averaging.function = colMedians,
+              p.anova = p.anova,
+              center.flag = center.flag,
+              extra.sparse = extra.sparse,
+              specific.pair = specific.pair,
+              parallel.vs = parallel.vs,
+              spatial.flag = spatial.flag,full.version = full.version)
+  return(param)
+}
+
+DIALOGUE.run.v1<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno = NULL,full.version = T,
+                          PMD2 = F,conf = "cellQ",covar = c("cellQ","tme.qc"),n.genes = 200,
+                          averaging.function = colMedians,p.anova = 0.05,specific.pair = NULL,find.genes = T,
+                          parallel.vs = F,center.flag = T,extra.sparse = F, bypass.emp = F, abn.c = 15, spatial.flag = F){
   full.version <- T
   names(rA)<-laply(rA,function(r) r@name)
   R<-DIALOGUE1(rA = rA,k = k,main = main,
@@ -92,10 +156,126 @@ DIALOGUE.pheno<-function(R,pheno =  "clin.status",cca.flag = F,rA,frm,selected.s
   return(Z)
 }
 
-DIALOGUE1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",conf = "cellQ",
-                    covar = c("cellQ","tme.qc","sex","pathology"),n.genes = 200,PMD2 = F,extra.sparse = F,
-                    averaging.function = colMeans,p.anova = 0.05,specific.pair = NULL,center.flag = F,
-                    seed1 = 1234,bypass.emp = F,abn.c = 15,spatial.flag = F){
+DIALOGUE1<-function(rA,main,param){
+  
+  print("#************DIALOGUE Step I: PMD ************#")
+  dir.create(param$results.dir)
+  p.anova<-param$p.anova
+  X<-lapply(rA, function(r){
+    if(!is.null(r@extra.scores$XAv)){
+      print("Using previous sample-level computations")
+      X1<-r@extra.scores$XAv
+      return(X1)
+    }
+    X1<-average.mat.rows(r@X,r@samples,f = param$averaging.function)
+    if(param$spatial.flag){return(X1)}
+    b<-get.abundant(r@samples,abn.c = param$abn.c,boolean.flag = T)
+    p<-p.adjust(apply.anova(X = r@X[b,],y = r@samples[b],MARGIN = 2),method = "BH")
+    print(paste0(r@name,": Removing ",sum(p>p.anova)," of ",length(p)," features."))
+    if(sum(p<p.anova)<5){
+      err.message1<-paste("Only",sum(p<p.anova),r@name,"features passed the ANOVA filter. Try rerunning without",r@name)
+      #err.message2<-"Make sure the data includes at least 5 samples where all cell types are well represented."
+      print(err.message1);#print(err.message2)
+      stop(err.message1)}
+    X1<-X1[,names(p)[p<p.anova]]
+    return(X1)
+  })
+  cell.types<-names(rA)
+  names(X)<-cell.types
+  n1<-length(cell.types)
+  
+  # Finding shared samples
+  samples<-unlist(lapply(cell.types, function(x) rownames(X[[x]])))
+  samplesU<-get.abundant(samples,n1)
+  if(length(samplesU)<5){
+    stop("Cannot run DIALOGUE with less than 5 samples.")
+  }
+  
+  # Centering and scaling (optional)
+  f<-function(X1){
+    if(param$center.flag){
+      X1<-center.matrix(X1,dim = 2,sd.flag = T)
+      X1<-cap.mat(X1,cap = 0.01,MARGIN = 2)
+    }
+    X1<-X1[samplesU,]
+    return(X1)
+  }
+  X<-lapply(X, f)
+  k1<-ncol(X[[1]])
+  
+  if(is.null(param$specific.pair)){
+    out<-DIALOGUE1.PMD(X = X,k = param$k,PMD2 = param$PMD2,extra.sparse = param$extra.sparse,seed1 = param$seed1)
+    emp.p<-DIALOGUE1.PMD.empirical(X,param$k,n1 = 100,extra.sparse = param$extra.sparse)
+    if(param$bypass.emp){
+      emp.p1<-emp.p
+      emp.p[]<-0.05
+      print("Not using empirical p-values!")
+      print(emp.p)
+    }
+  }else{
+    out<-DIALOGUE1.PMD.pairwise(X,param$k,param$specific.pair)
+    if(out$message=="No programs"){return(out)}
+    rA<-rA[param$specific.pair]
+    X<-X[param$specific.pair]
+    emp.p<-DIALOGUE1.PMD.empirical(X,param$k,n1 = 20,extra.sparse = param$extra.sparse)
+    emp.p<-subset.matrix(emp.p,is.element(rownames(emp.p),colnames(out$ws[[1]])))
+    rownames(emp.p)<-paste0("MCP",1:nrow(emp.p))
+    main<-paste(main,paste(param$specific.pair,collapse = "."),sep = "_")
+    cell.types<-names(rA)
+    n1<-length(cell.types)
+  }
+  
+  Y<-lapply(names(X), function(i) X[[i]]%*%out$ws[[i]])
+  names(Y)<-names(X)
+  pairs1<-t(combn(names(X),2))
+  cca.cor<-apply(pairs1,1,function(x) diag(cor(Y[[x[1]]],Y[[x[2]]])))
+  cca.cor.p<-apply(pairs1,1,function(x) diag(spearman.cor(Y[[x[1]]],Y[[x[2]]],method = "pearson")$p))
+  colnames(cca.cor)<-paste(pairs1[,1],pairs1[,2],sep = "_")
+  colnames(cca.cor.p)<-colnames(cca.cor)
+  y<-list()
+  R<-list(name = paste0("DIALOGUE1_",main),param = param,
+          cell.types = cell.types,k = c(param$k,laply(X,ncol)),
+          samples = samplesU,
+          sample.PCs = X,
+          samples.cells = list(),
+          conf = param$conf,
+          covar = param$covar,
+          emp.p = emp.p,
+          cca = out,cca.cor = list(R = cca.cor,P = cca.cor.p),
+          cca.scores = list(),cca.gene.cor = list(),
+          cca.sig = list(),cca.redun.cor = list())
+  R$MCP.cell.types <- DIALOGUE.identify.cell.types(R)
+  names(R$k)<-c("DIALOGUE",paste0("original.",cell.types))
+  R$message<-paste("DIALOGUE1 found",nrow(emp.p),"programs.")
+  
+  for(x in cell.types){
+    r<-rA[[x]]
+    y[[x]]<-r@X[,rownames(out$ws[[x]])]%*%out$ws[[x]]
+    scores0<-as.matrix(y[[x]])
+    conf.m<-r@metadata[,is.element(colnames(r@metadata),param$conf)]
+    r@scores<-t(get.residuals(t(scores0),conf.m))
+    R$cca.scores[[x]]<-r@scores
+    R$cca.gene.cor1[[x]]<-cor(t(r@tpm),r@scores)
+    g1<-sort(unique(unlist(get.top.cor(R$cca.gene.cor1[[x]],q = param$n.genes,min.ci = 0.05))))
+    R$cca.gene.cor[[x]]<-pcor.mat(t(r@tpm[g1,]),r@scores,r@cellQ)
+    C1<-R$cca.gene.cor[[x]]$R
+    P1<-R$cca.gene.cor[[x]]$P
+    C1[P1>(0.05/nrow(r@tpm))]<-0
+    R$cca.sig[[x]]<-get.top.cor(C1,q = param$n.genes,min.ci = 0.05)
+    R$cca.redun.cor[[x]]<-cor(r@scores[,1:param$k])
+    R$samples.cells[[x]]<-r@samples
+  }
+  if(param$bypass.emp){R$emp.p1<-emp.p1}
+  saveRDS(R,file = paste0(param$results.dir,"/",R$name,".rds"))
+  dir.create(paste0(param$results.dir,"/DIALOGUE2_",main))
+  return(R)
+}
+
+
+DIALOGUE1.v1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",conf = "cellQ",
+                       covar = c("cellQ","tme.qc","sex","pathology"),n.genes = 200,PMD2 = F,extra.sparse = F,
+                       averaging.function = colMeans,p.anova = 0.05,specific.pair = NULL,center.flag = F,
+                       seed1 = 1234,bypass.emp = F,abn.c = 15,spatial.flag = F){
   
   print("#************DIALOGUE Step I: PMD ************#")
   dir.create(results.dir)
@@ -334,7 +514,13 @@ DIALOGUE2<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",subsampl
   file2<-paste0(results.dir,"/DIALOGUE2_",main,".rds")
   
   R<-readRDS(file1)
-  R$frm<-paste0("y ~ (1 | samples) + x + ",paste(R$covar,collapse = " + "))
+  if(is.null(R$param$frm)){
+    R$frm<-paste0("y ~ (1 | samples) + x + ",paste(R$covar,collapse = " + "))
+  }else{
+    R$frm<-R$param$frm
+    print("Using input formula.")
+  }
+  print(R$frm)
   
   k2<-ncol(R$cca$ws[[1]])
   pairs1<-t(combn(cell.types,2))
@@ -805,6 +991,11 @@ sig2MCP<-function(R.sig,k = 5){
 }
 
 DIALOGUE.identify.cell.types<-function(R){
+  if(!is.null(R$param$MCP.cell.types)){
+    print("Using pre-defined cell types.")
+    return(R$param$MCP.cell.types)
+  }
+  
   if(length(R$cell.types)==2){
     MCP.cell.types<-lapply(R$emp.p, function(x){
       if(x<0.1){return(R$cell.types)}
@@ -937,3 +1128,5 @@ DIALOGUE.pheno.multiclass<-function(R,pheno =  "clin.status",cca.flag = F,rA,frm
   }
   return(Za)
 }
+
+
