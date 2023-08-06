@@ -30,6 +30,7 @@ DIALOGUE.run<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno =
                        PMD2 = F,conf = "cellQ",covar = c("cellQ","tme.qc"),n.genes = 200,
                        averaging.function = colMedians,p.anova = 0.05,specific.pair = NULL,find.genes = T,
                        parallel.vs = F,center.flag = T,extra.sparse = F, bypass.emp = F, abn.c = 15, spatial.flag = F){
+  full.version <- T
   names(rA)<-laply(rA,function(r) r@name)
   R<-DIALOGUE1(rA = rA,k = k,main = main,
                results.dir = results.dir, PMD2 = PMD2,covar = covar,conf = conf,
