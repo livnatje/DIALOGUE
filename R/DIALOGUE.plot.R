@@ -21,19 +21,26 @@
 #' # Alternatively
 #' R<-DIALOGUE.run(rA,results.dir = "~/Desktop/Results/",plot.flag = T)
 #'
-#' @author Livnat Jerby-Arnon
+#' @author Livnat Jerby
 #' @export
 #'
 
-DIALOGUE.plot<-function(R,results.dir = "~/Desktop/DIALOGUE.results/",
+DIALOGUE.plot<-function(R,results.dir = "~/Desktop/DIALOGUE.results/",filename,
                         pheno = NULL,mark.samples = NULL,metadata = NULL,d = 1, MCPs = 1:R$k["DIALOGUE"]){
   
-  pdf(paste0(results.dir,"/",R$name,".pdf"))
+  if(missing(filename)){
+    filename<-paste0(results.dir,"/",R$name,".pdf")
+  }else{
+    filename<-paste0(results.dir,"/",filename,".pdf")
+  }
+  pdf(filename)
+  
   DIALOGUE.plot.av(R,mark.samples = mark.samples,metadata = metadata,d = d,MCPs = MCPs)
   DIALOGUE.plot.sig.comp(R)
   if(!is.null(pheno)){
     DIALOGUE.violin.pheno(R,pheno = pheno,MCPs = MCPs,d = d)
   }
+  DIALOGUE.upset(R)
   dev.off();par(font.axis = 2);par(font.lab = 2);par(font = 2)
 }
 
@@ -94,12 +101,17 @@ DIALOGUE.plot.sig.comp<-function(R,main = ""){
     v<-list.2.ids(genes,sig1)
     return(c(v))
   }
-  m1<-t(laply(R$MCPs,f))
-  m2<-t(laply(R$MCPs,function(x) f(x,-1)))
-
-  colnames(m1)<-paste0(names(R$MCPs),".up")
-  colnames(m2)<-paste0(names(R$MCPs),".down")
-  m<-cbind(m1,m2)
+  if(length(R$MCPs)>1){
+    m1<-t(laply(R$MCPs,f))
+    m2<-t(laply(R$MCPs,function(x) f(x,-1)))
+    colnames(m1)<-paste0(names(R$MCPs),".up")
+    colnames(m2)<-paste0(names(R$MCPs),".down")
+    m<-cbind(m1,m2)
+  }else{
+    m<-cbind(f(R$MCPs[[1]]),f(R$MCPs[[1]],d = -1))
+    colnames(m)<-paste0(names(R$MCPs),c(".up",".down"))
+  }
+  
   idx<-R$cell.types
   idxA<-idx
   for(i in 2:length(idx)){
@@ -123,6 +135,19 @@ DIALOGUE.plot.sig.comp<-function(R,main = ""){
   return(m2)
 }
 
+DIALOGUE.upset<-function(R){
+  p<-lapply(names(R$MCPs), function(x){
+    sig<-R$MCPs[[x]]
+    names(sig)<-paste(x,names(sig),sep = ".")
+    p1<-list(upset(fromList(sig[grepl("up",names(sig))]), order.by = "freq"),
+             upset(fromList(sig[grepl("down",names(sig))]), order.by = "freq"))
+    return(p1)
+  })
+  print(p)
+  return(p)
+  
+}
+
 DIALOGUE.violin.pheno<-function(R,pheno = "pathology",MCPs,selected.samples,d = 1){
   k<-R$k["DIALOGUE"]
   X<-NULL
@@ -139,14 +164,14 @@ DIALOGUE.violin.pheno<-function(R,pheno = "pathology",MCPs,selected.samples,d = 
   f<-function(x){
     b<-is.element(X$cell.type,R$MCP.cell.types[[x]])
     violin.split(scores = d*X[b,x],treatment = X[b,pheno],
-                 conditions = X$id[b],
-                 main = x)
+                 conditions = X$id[b],xlab = "",
+                 main = paste0(x," (",pheno,")"))
     return(x)
   }
   if(missing(MCPs)){MCPs<-paste0("MCP",1:k)}
   laply(MCPs,f)
   return()
-
+  
 }
 
 multiplot.util<-function(plotlist,nplots = 4,cols = 2){
@@ -189,7 +214,7 @@ multiplot<-function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
   numPlots = length(plots)
-
+  
   # If layout is NULL, then use 'cols' to determine layout
   if (is.null(layout)) {
     # Make the panel
@@ -198,20 +223,20 @@ multiplot<-function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
                      ncol = cols, nrow = ceiling(numPlots/cols))
   }
-
+  
   if (numPlots==1) {
     print(plots[[1]])
-
+    
   } else {
     # Set up the page
     grid.newpage()
     pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-
+    
     # Make each plot, in the correct location
     for (i in 1:numPlots) {
       # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-
+      
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
                                       layout.pos.col = matchidx$col))
     }
