@@ -5,14 +5,10 @@
 #' as a function of its environment. 
 #' 
 #' @param rA list of \linkS4class{cell.type} objects.
-#' @param k the number of multicellular programs to identify;
-#' @param results.dir path to the results directory, where the output will be saved;
+#' @param main the name of the run that will be used for naming the output files in the results directory
+#' @param param the parameters of the run - these will also be saved with the output for reproducibility.
+#' See \code{\link{DLG.get.param}} for more information.
 #' @param plot.flag if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;
-#' @param abn.c the minimal number of cells that a sample should have to be considered for MCP detection;
-#' @param spatial.flag should be TRUE if working with spatial data with small niches, and TRUE if working with single cell data or larger tissue microenvironment niches. The default value is FALSE.
-#' @param add.effects whether to add additional covariates to the multilevel model;
-#' if TRUE then the covariates will extracted from the [conf] slot in the \linkS4class{cell.type} objects;
-#' default is FALSE.
 #' 
 #' @return A list with the following components:
 #' @return sig -  the multicellular programs, given as a list of signatures;
@@ -26,7 +22,7 @@
 #' @export
 #' 
 
-DIALOGUE.run<-function(rA,main,param){
+DIALOGUE.run<-function(rA,main,param,plot.flag){
   full.version <- T
   names(rA)<-laply(rA,function(r) r@name)
   R<-DIALOGUE1(rA = rA,main = main,param = param)
