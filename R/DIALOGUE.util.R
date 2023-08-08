@@ -516,3 +516,56 @@ apply.formula.all.HLM<-function(r,X,Y,MARGIN = 1,formula = "y ~ (1 | samples) + 
   return(m)
 }
 
+pcor.mat<-function(v1,v2,v3, method = 'spearman',use = "pairwise.complete.obs",alternative = "two.sided"){
+  f<-function(x1,x2,x3){
+    c.i<-tryCatch(pcor.test(x1,x2,x3,method = method),
+                  error = function(err){return(NA)})
+    if(is.list(c.i)){return(c(c.i$estimate,c.i$p.value))}
+    return(c(NA,NA))
+  }
+  
+  f<-function(x1,x2,x3){
+    c.i<-pcor.test(x1,x2,x3,method = method)
+    return(c(c.i$estimate,c.i$p.value))
+  }
+  
+  P<-get.mat(colnames(v1),colnames(v2));R<-P
+  for(x in 1:ncol(v2)){
+    x2<-v2[,x]
+    c1<-apply(v1,2,function(x1) f(x1,x2,v3))
+    R[,x]<-c1[1,]
+    P[,x]<-c1[2,]
+  }
+  padj<-p.adjust.mat(P,method = "BH")
+  rslts<-list(R = R,P = P,padj = padj)
+  return(rslts)
+}
+
+p.adjust.mat.per.label<-function(p,v){
+  p1<-get.mat(rownames(p),colnames(p),data = NA)
+  for(x in unique(v)){
+    b<-is.element(v,x)
+    if(is.null(ncol(p1))||ncol(p1)<2){
+      p1[b]<-p.adjust(p[b])
+    }else{
+      p1[b,]<-p.adjust.mat(p[b,])
+    }
+    
+  }
+  return(p1)
+}
+
+generic.vector2mat<-function(v,rn = get.strsplit(names(v),"_",1),cn = get.strsplit(names(v),"_",2)){
+  rnu <- sort(unique(rn))
+  cnu <- sort(unique(cn))
+  m<-get.mat(data = NA,m.rows = rnu,m.cols = cnu)
+  for(x in rnu){
+    v1<-v[rn==x]
+    cn1 <- cn[rn==x]
+    idx<-match(cnu,cn1)
+    m[x,]<-v1[idx]
+  }
+  return(m)
+}
+
+

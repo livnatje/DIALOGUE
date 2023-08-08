@@ -90,31 +90,6 @@ DLG.get.param<-function(k = 2,results.dir = DLG.file("/Results/MCPs/"),
   return(param)
 }
 
-DIALOGUE.run.v1<-function(rA,main,k = 3,results.dir = getwd(),plot.flag = T,pheno = NULL,full.version = T,
-                          PMD2 = F,conf = "cellQ",covar = c("cellQ","tme.qc"),n.genes = 200,
-                          averaging.function = colMedians,p.anova = 0.05,specific.pair = NULL,find.genes = T,
-                          parallel.vs = F,center.flag = T,extra.sparse = F, bypass.emp = F, abn.c = 15, spatial.flag = F){
-  full.version <- T
-  names(rA)<-laply(rA,function(r) r@name)
-  R<-DIALOGUE1(rA = rA,k = k,main = main,
-               results.dir = results.dir, PMD2 = PMD2,covar = covar,conf = conf,
-               n.genes = n.genes,averaging.function = averaging.function,extra.sparse = extra.sparse,
-               p.anova = p.anova,specific.pair = specific.pair,center.flag = center.flag,
-               bypass.emp = bypass.emp,abn.c = abn.c,spatial.flag = spatial.flag)
-  if(R$message=="No programs"){return(R)}
-  if(!find.genes){return(R)}
-  if(!is.null(specific.pair)){
-    main<-paste(main,paste(specific.pair,collapse = "."),sep = "_")
-    rA<-rA[specific.pair]
-  }
-  R<-DIALOGUE2(rA = rA,main = main,results.dir = results.dir,parallel.vs = parallel.vs)
-  R<-DIALOGUE3(rA = rA,main = main,results.dir = results.dir,full.version = full.version,pheno = pheno)
-  if(plot.flag){
-    DIALOGUE.plot(R,results.dir = results.dir,pheno = pheno)
-  }
-  return(R)
-}
-
 DIALOGUE.pheno<-function(R,pheno =  "clin.status",cca.flag = F,rA,frm,selected.samples = NULL){
   k<-R$k["DIALOGUE"]
   if(missing(frm)){
@@ -268,127 +243,6 @@ DIALOGUE1<-function(rA,main,param){
   if(param$bypass.emp){R$emp.p1<-emp.p1}
   saveRDS(R,file = paste0(param$results.dir,"/",R$name,".rds"))
   dir.create(paste0(param$results.dir,"/DIALOGUE2_",main))
-  return(R)
-}
-
-
-DIALOGUE1.v1<-function(rA,k = 5,main,results.dir = "~/Desktop/DIALOGUE.results/",conf = "cellQ",
-                       covar = c("cellQ","tme.qc","sex","pathology"),n.genes = 200,PMD2 = F,extra.sparse = F,
-                       averaging.function = colMeans,p.anova = 0.05,specific.pair = NULL,center.flag = F,
-                       seed1 = 1234,bypass.emp = F,abn.c = 15,spatial.flag = F){
-  
-  print("#************DIALOGUE Step I: PMD ************#")
-  dir.create(results.dir)
-  X<-lapply(rA, function(r){
-    if(!is.null(r@extra.scores$XAv)){
-      print("Using previous sample-level computations")
-      X1<-r@extra.scores$XAv
-      return(X1)
-    }
-    X1<-average.mat.rows(r@X,r@samples,f = averaging.function)
-    if(spatial.flag){return(X1)}
-    b<-get.abundant(r@samples,abn.c = abn.c,boolean.flag = T)
-    p<-p.adjust(apply.anova(X = r@X[b,],y = r@samples[b],MARGIN = 2),method = "BH")
-    print(paste0(r@name,": Removing ",sum(p>p.anova)," of ",length(p)," features."))
-    if(sum(p<p.anova)<5){
-      err.message1<-paste("Only",sum(p<p.anova),r@name,"features passed the ANOVA filter. Try rerunning without",r@name)
-      #err.message2<-"Make sure the data includes at least 5 samples where all cell types are well represented."
-      print(err.message1);#print(err.message2)
-      stop(err.message1)}
-    X1<-X1[,names(p)[p<p.anova]]
-    return(X1)
-  })
-  cell.types<-names(rA)
-  names(X)<-cell.types
-  n1<-length(cell.types)
-  
-  # Finding shared samples
-  samples<-unlist(lapply(cell.types, function(x) rownames(X[[x]])))
-  samplesU<-get.abundant(samples,n1)
-  if(length(samplesU)<5){
-    stop("Cannot run DIALOGUE with less than 5 samples.")
-  }
-  
-  # Centering and scalling (optional)
-  f<-function(X1){
-    if(center.flag){
-      X1<-center.matrix(X1,dim = 2,sd.flag = T)
-      X1<-cap.mat(X1,cap = 0.01,MARGIN = 2)
-    }
-    X1<-X1[samplesU,]
-    return(X1)
-  }
-  X<-lapply(X, f)
-  k1<-ncol(X[[1]])
-  
-  if(is.null(specific.pair)){
-    out<-DIALOGUE1.PMD(X = X,k = k,PMD2 = PMD2,extra.sparse = extra.sparse,seed1 = seed1)
-    emp.p<-DIALOGUE1.PMD.empirical(X,k,n1 = 100,extra.sparse = extra.sparse)
-    if(bypass.emp){
-      emp.p1<-emp.p
-      emp.p[]<-0.05
-      print("Not using empirical p-values!")
-      print(emp.p)
-    }
-  }else{
-    out<-DIALOGUE1.PMD.pairwise(X,k,specific.pair)
-    if(out$message=="No programs"){return(out)}
-    rA<-rA[specific.pair]
-    X<-X[specific.pair]
-    emp.p<-DIALOGUE1.PMD.empirical(X,k,n1 = 20,extra.sparse = extra.sparse)
-    emp.p<-subset.matrix(emp.p,is.element(rownames(emp.p),colnames(out$ws[[1]])))
-    rownames(emp.p)<-paste0("MCP",1:nrow(emp.p))
-    main<-paste(main,paste(specific.pair,collapse = "."),sep = "_")
-    cell.types<-names(rA)
-    n1<-length(cell.types)
-  }
-  
-  Y<-lapply(names(X), function(i) X[[i]]%*%out$ws[[i]])
-  names(Y)<-names(X)
-  pairs1<-t(combn(names(X),2))
-  cca.cor<-apply(pairs1,1,function(x) diag(cor(Y[[x[1]]],Y[[x[2]]])))
-  cca.cor.p<-apply(pairs1,1,function(x) diag(spearman.cor(Y[[x[1]]],Y[[x[2]]],method = "pearson")$p))
-  colnames(cca.cor)<-paste(pairs1[,1],pairs1[,2],sep = "_")
-  colnames(cca.cor.p)<-colnames(cca.cor)
-  y<-list()
-  param<-list(conf = conf,covar = covar,n.genes = n.genes,PMD2 = PMD2,extra.sparse = extra.sparse,
-              averaging.function = averaging.function,p.anova = p.anova,specific.pair = specific.pair,
-              center.flag = center.flag,seed1 = seed1)
-  R<-list(name = paste0("DIALOGUE1_",main),param = param,
-          cell.types = cell.types,k = c(k,laply(X,ncol)),
-          samples = samplesU,
-          sample.PCs = X,
-          samples.cells = list(),
-          conf = conf,
-          covar = covar,
-          emp.p = emp.p,
-          cca = out,cca.cor = list(R = cca.cor,P = cca.cor.p),
-          cca.scores = list(),cca.gene.cor = list(),
-          cca.sig = list(),cca.redun.cor = list())
-  R$MCP.cell.types <- DIALOGUE.identify.cell.types(R)
-  names(R$k)<-c("DIALOGUE",paste0("original.",cell.types))
-  R$message<-paste("DIALOGUE1 found",nrow(emp.p),"programs.")
-  
-  for(x in cell.types){
-    r<-rA[[x]]
-    y[[x]]<-r@X[,rownames(out$ws[[x]])]%*%out$ws[[x]]
-    scores0<-as.matrix(y[[x]])
-    conf.m<-r@metadata[,is.element(colnames(r@metadata),conf)]
-    r@scores<-t(get.residuals(t(scores0),conf.m))
-    R$cca.scores[[x]]<-r@scores
-    R$cca.gene.cor1[[x]]<-cor(t(r@tpm),r@scores)
-    g1<-sort(unique(unlist(get.top.cor(R$cca.gene.cor1[[x]],q = n.genes,min.ci = 0.05))))
-    R$cca.gene.cor[[x]]<-pcor.mat(t(r@tpm[g1,]),r@scores,r@cellQ)
-    C1<-R$cca.gene.cor[[x]]$R
-    P1<-R$cca.gene.cor[[x]]$P
-    C1[P1>(0.05/nrow(r@tpm))]<-0
-    R$cca.sig[[x]]<-get.top.cor(C1,q = n.genes,min.ci = 0.05)
-    R$cca.redun.cor[[x]]<-cor(r@scores[,1:k])
-    R$samples.cells[[x]]<-r@samples
-  }
-  if(bypass.emp){R$emp.p1<-emp.p1}
-  saveRDS(R,file = paste0(results.dir,"/",R$name,".rds"))
-  dir.create(paste0(results.dir,"/DIALOGUE2_",main))
   return(R)
 }
 
@@ -576,10 +430,8 @@ DIALOGUE2.pair<-function(R,r1,r2,cell.types,results.dir){
   r1@tme<-r2@tpmAv[,as.character(r1@samples)]
   r2@tme<-r1@tpmAv[,as.character(r2@samples)]
   
-  #### NEW (added 06/01/21)
   r1@tme.qc<-as.matrix(r2@qcAv)[as.character(r1@samples),2]
   r2@tme.qc<-as.matrix(r1@qcAv)[as.character(r2@samples),2]
-  #### NEW (ended)
   
   r1a<-cell.type.2.list(r1)
   r2a<-cell.type.2.list(r2)
@@ -600,7 +452,6 @@ DIALOGUE2.pair<-function(R,r1,r2,cell.types,results.dir){
     return(results)
   }
   
-  # idx<-unique(get.strsplit(names(sig1),".",1))
   R1<-lapply(MCP.names,function(x){f1(sig1,sig2,x)})
   names(R1)<-MCP.names
   R1$p1<-NULL;R1$p2<-NULL
@@ -1023,58 +874,6 @@ DIALOGUE.identify.cell.types<-function(R){
     MCP.cell.types[[x]]<-cell.types
   }
   return(MCP.cell.types)
-}
-
-pcor.mat<-function(v1,v2,v3, method = 'spearman',use = "pairwise.complete.obs",alternative = "two.sided"){
-  f<-function(x1,x2,x3){
-    c.i<-tryCatch(pcor.test(x1,x2,x3,method = method),
-                  error = function(err){return(NA)})
-    if(is.list(c.i)){return(c(c.i$estimate,c.i$p.value))}
-    return(c(NA,NA))
-  }
-  
-  f<-function(x1,x2,x3){
-    c.i<-pcor.test(x1,x2,x3,method = method)
-    return(c(c.i$estimate,c.i$p.value))
-  }
-  
-  P<-get.mat(colnames(v1),colnames(v2));R<-P
-  for(x in 1:ncol(v2)){
-    x2<-v2[,x]
-    c1<-apply(v1,2,function(x1) f(x1,x2,v3))
-    R[,x]<-c1[1,]
-    P[,x]<-c1[2,]
-  }
-  padj<-p.adjust.mat(P,method = "BH")
-  rslts<-list(R = R,P = P,padj = padj)
-  return(rslts)
-}
-
-p.adjust.mat.per.label<-function(p,v){
-  p1<-get.mat(rownames(p),colnames(p),data = NA)
-  for(x in unique(v)){
-    b<-is.element(v,x)
-    if(is.null(ncol(p1))||ncol(p1)<2){
-      p1[b]<-p.adjust(p[b])
-    }else{
-      p1[b,]<-p.adjust.mat(p[b,])
-    }
-    
-  }
-  return(p1)
-}
-
-generic.vector2mat<-function(v,rn = get.strsplit(names(v),"_",1),cn = get.strsplit(names(v),"_",2)){
-  rnu <- sort(unique(rn))
-  cnu <- sort(unique(cn))
-  m<-get.mat(data = NA,m.rows = rnu,m.cols = cnu)
-  for(x in rnu){
-    v1<-v[rn==x]
-    cn1 <- cn[rn==x]
-    idx<-match(cnu,cn1)
-    m[x,]<-v1[idx]
-  }
-  return(m)
 }
 
 DIALOGUE.pheno.multiclass<-function(R,pheno =  "clin.status",cca.flag = F,rA,frm,selected.samples = NULL){
