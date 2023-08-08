@@ -7,6 +7,7 @@
 DIALOGUE.plot(
   R,
   results.dir = "~/Desktop/DIALOGUE.results/",
+  filename,
   pheno = NULL,
   mark.samples = NULL,
   metadata = NULL,
@@ -42,5 +43,5 @@ R<-DIALOGUE.run(rA,results.dir = "~/Desktop/Results/",plot.flag = T)
 
 }
 \author{
-Livnat Jerby-Arnon
+Livnat Jerby
 }
