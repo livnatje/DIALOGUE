@@ -4,7 +4,7 @@
 \alias{DIALOGUE.run}
 \title{DIALOGUE.run}
 \usage{
-DIALOGUE.run(rA, main, param, plot.flag)
+DIALOGUE.run(rA, main, param, plot.flag = T)
 }
 \arguments{
 \item{rA}{list of \linkS4class{cell.type} objects.}
