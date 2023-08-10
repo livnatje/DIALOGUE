@@ -22,7 +22,7 @@
 #' @export
 #' 
 
-DIALOGUE.run<-function(rA,main,param,plot.flag){
+DIALOGUE.run<-function(rA,main,param,plot.flag = T){
   # Ensuring the output directory exists
   assertthat::assert_that(file.exists(param$results.dir))
   
