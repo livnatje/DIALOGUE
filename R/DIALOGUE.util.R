@@ -62,6 +62,8 @@ center.matrix<-function(m,dim = 1,sd.flag = F){
   return(zscores)
 }
 
+#' cap.mat
+#' @export
 cap.mat<-function(M,cap = 0.01,MARGIN = 1){
   Z<-apply(M,MARGIN = MARGIN,function(x){
     q9<-quantile(x,1-cap)
@@ -165,6 +167,8 @@ sample.per.label<-function(labels,size,boolean.flag = T,v,remove.flag = F){
   return(vr)
 }
 
+#' get.strsplit
+#' @export
 get.strsplit<-function(v,sep,idx){
   v<-as.character(v)
   vi<-laply(strsplit(v,split = sep,fixed = T),function(x) x[idx])
@@ -568,6 +572,146 @@ generic.vector2mat<-function(v,rn = get.strsplit(names(v),"_",1),cn = get.strspl
     m[x,]<-v1[idx]
   }
   return(m)
+}
+
+#' call.plot.plus
+#' @export
+call.plot.plus<-function(x, y = NULL,labels,b.top,red.top = F,regression.flag = F,my.col = NULL,set.flag = F,cor.flag = F,
+                         pch=16,cex=0.3,main="",ylab = "tSNE2",xlab = "tSNE1", cex.axis = 0.6,
+                         add.N = F,grey.zeros = F,legend.flag = T){
+  
+  regl<-call.plot(x = x,y = y,labels,regression.flag,my.col = my.col,
+                  set.flag = set.flag,cor.flag = cor.flag,
+                  pch = pch,cex = cex,main = main,ylab = ylab,xlab = xlab,
+                  cex.axis = cex.axis,
+                  add.N = add.N,legend.flag = legend.flag)
+  if(is.null(y)){
+    v<-colnames(x)
+    if(xlab==""){xlab<-v[1]}
+    if(ylab==""){ylab<-v[2]}
+    y<-x[,2];x<-x[,1]
+  }
+  if(red.top){
+    points(x[b.top],y[b.top],cex = cex,col = "red",pch = 1)
+  }else{
+    if(is.null(my.col)){
+      if(grey.zeros){
+        my.col<-rep("grey",length(labels))
+        my.col[labels>0]<-labels.2.colors(labels[labels>0])
+      }else{
+        my.col <- labels.2.colors(labels)
+      }
+    }
+    points(x[b.top],y[b.top],cex = cex,col = my.col[b.top],pch = 16)
+  }
+  return(regl)
+  
+}
+#' call.plot
+#' @export
+call.plot<-function(x, y = NULL,labels,regression.flag = F,my.col = NULL,set.flag = F,cor.flag = F,legend.flag = T,
+                    pch=16,cex=0.5,main="",ylab = "UMAP2",xlab = "UMAP1", cex.axis = 0.6,add.N = F,cex.main = 1,
+                    color.spec = "rgb"){
+  main<-capitalize(main)
+  if(add.N&length(unique(labels))<30){
+    labels<-add.n.of.samples(labels)
+  }
+  if(set.flag){
+    par(mar=c(8, 7, 4.1, 12.1), xpd=TRUE)
+  }
+  if(is.null(my.col)){
+    my.col<-labels.2.colors(labels,color.spec = color.spec)
+  }
+  if(is.null(y)){
+    if(missing(xlab)){xlab<-colnames(x)[1]}
+    if(missing(ylab)){ylab<-colnames(x)[2]}
+    y<-x[,2];x<-x[,1]
+  }
+  
+  if(cor.flag){
+    xy.cor<-spearman.cor(y,x)
+    main <- paste(main, "\nR =",format(xy.cor[1],digits = 2),"P =",format(xy.cor[2],scientific = T,digits = 2))
+  }
+  plot(x,y,col=my.col,pch=pch,cex=cex,main=main,ylab=ylab,xlab = xlab,cex.axis = cex.axis,cex.main = cex.main)  
+  
+  labels<-gsub(" ","_",labels)
+  l<-(max(x,na.rm = T)-min(x,na.rm = T))/20
+  if(length(unique(labels))<30&legend.flag){
+    if(length(pch)==length(labels)){
+      map<-unique(paste(labels,my.col,pch))
+      labels.n<-as.matrix(table(labels))
+      idx<-match(get.strsplit(map,' ',1),names(labels.n))
+      map[,1]<-paste0(map[,1]," (N = ",m[idx],")")
+      print(as.integer(get.strsplit(map,' ',3)))
+      legend(x = max(x,na.rm = T)+l,
+             y = max(y,na.rm = T),
+             legend = get.strsplit(map,' ',1), 
+             col = get.strsplit(map,' ',2),
+             inset=c(-0.5,0),
+             bty = "n",lty= NA, lwd = 0,cex = 0.7,pch = pch)
+    }else{
+      map<-unique(paste(labels,my.col,pch))
+      legend(x = max(x,na.rm = T)+l,
+             y = max(y,na.rm = T),inset = c(-0.5,0),
+             legend = gsub("_"," ",get.strsplit(map,' ',1)), 
+             col = get.strsplit(map,' ',2),xpd = T,
+             bty = "n",lty= NA, lwd = 0,cex = 0.7,pch = pch)
+    }
+    
+  }
+  if(regression.flag ==1){
+    b<-!is.na(x)&!is.na(y)
+    v<-lowess(x[b],y[b])
+    lines(v)
+    return(v)
+  }
+  if(regression.flag ==2){
+    b<-!is.na(x)&!is.na(y)
+    ulabels<-unique(labels)
+    for(i in ulabels){
+      bi<-b&labels==i
+      v<-lowess(x[bi],y[bi])
+      lines(v)
+    }
+    
+  }
+  
+  
+}
+
+
+#' add.n.of.samples
+#' @export
+add.n.of.samples<-function(l,n.flag = T,sep = " "){
+  num.samples<-table(l)
+  idx<-match(l,names(num.samples))
+  if(n.flag){
+    l<-paste0(l,sep,"(n = ",num.samples[idx],")")
+  }else{
+    l<-paste0(l,sep,"(",num.samples[idx],")")
+  }
+  return(l)
+}
+
+
+#' call.plot.multilabels
+#' @export
+call.plot.multilabels<-function(X,labels,main = NULL,xlab = "UMAP1",ylab="UMAP2",add.N = F,
+                                pch = 16, cex = 0.3, cex.axis = 0.6,set.flag = F){
+  laply(1:ncol(labels),function(i){
+    call.plot(X,labels = labels[,i],
+              main = ifelse(is.null(main),colnames(labels)[i],
+                            paste(main,colnames(labels)[i],sep = ":")),
+              xlab = xlab,ylab = ylab,pch = pch,cex.axis = cex.axis,cex = cex,
+              set.flag = set.flag,add.N = add.N)
+    return(i)})
+}
+
+labels.2.colors<-function(x.class,x){
+  palette("default")
+  call_col<-plotrix::color.scale(x.class,c(0,10),0.8,0.8,color.spec = "hsv")
+  if(!missing(x)){names(call_col)<-x}
+  return(call_col)
 }
 
 
