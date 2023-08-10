@@ -707,9 +707,9 @@ call.plot.multilabels<-function(X,labels,main = NULL,xlab = "UMAP1",ylab="UMAP2"
     return(i)})
 }
 
-labels.2.colors<-function(x.class,x){
+labels.2.colors<-function(x.class,x,color.spec = "hsv"){
   palette("default")
-  call_col<-plotrix::color.scale(x.class,c(0,10),0.8,0.8,color.spec = "hsv")
+  call_col<-plotrix::color.scale(x.class,c(0,10),0.8,0.8,color.spec = color.spec)
   if(!missing(x)){names(call_col)<-x}
   return(call_col)
 }
