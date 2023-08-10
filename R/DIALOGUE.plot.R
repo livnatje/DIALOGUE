@@ -136,7 +136,7 @@ DIALOGUE.plot.sig.comp<-function(R,main = ""){
 }
 
 DIALOGUE.upset<-function(R){
-  p<-lapply(names(R$MCPs[laply(R$MCPs,!is.null)]), function(x){
+  p<-lapply(names(R$MCPs[!laply(R$MCPs,is.null)]), function(x){
     sig<-R$MCPs[[x]]
     names(sig)<-paste(x,names(sig),sep = ".")
     p1<-list(upset(fromList(sig[grepl("up",names(sig))]), order.by = "freq"),
