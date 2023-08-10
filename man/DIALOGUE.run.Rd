@@ -4,24 +4,17 @@
 \alias{DIALOGUE.run}
 \title{DIALOGUE.run}
 \usage{
-DIALOGUE.run(rA, main, param)
+DIALOGUE.run(rA, main, param, plot.flag)
 }
 \arguments{
 \item{rA}{list of \linkS4class{cell.type} objects.}
 
-\item{k}{the number of multicellular programs to identify;}
+\item{main}{the name of the run that will be used for naming the output files in the results directory}
 
-\item{results.dir}{path to the results directory, where the output will be saved;}
+\item{param}{the parameters of the run - these will also be saved with the output for reproducibility.
+See \code{\link{DLG.get.param}} for more information.}
 
 \item{plot.flag}{if TRUE then \code{\link{DIALOGUE.plot}} will be called to plot the results; default is FALSE;}
-
-\item{abn.c}{the minimal number of cells that a sample should have to be considered for MCP detection;}
-
-\item{spatial.flag}{should be TRUE if working with spatial data with small niches, and TRUE if working with single cell data or larger tissue microenvironment niches. The default value is FALSE.}
-
-\item{add.effects}{whether to add additional covariates to the multilevel model;
-if TRUE then the covariates will extracted from the [conf] slot in the \linkS4class{cell.type} objects;
-default is FALSE.}
 }
 \value{
 A list with the following components:

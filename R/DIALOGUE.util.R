@@ -48,6 +48,7 @@ get.abundant<-function(v,abn.c = 2,boolean.flag = F,top,decreasing = T){
   return(abn.names)
 }
 
+#' center.matrix
 #' @export
 center.matrix<-function(m,dim = 1,sd.flag = F){
   if(dim == 1){
