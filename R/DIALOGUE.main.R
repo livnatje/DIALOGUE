@@ -23,17 +23,21 @@
 #' 
 
 DIALOGUE.run<-function(rA,main,param,plot.flag){
-  full.version <- T
+  # Ensuring the output directory exists
+  assertthat::assert_that(file.exists(param$results.dir))
+  
   names(rA)<-laply(rA,function(r) r@name)
   R<-DIALOGUE1(rA = rA,main = main,param = param)
   if(R$message=="No programs"){return(R)}
   if(!param$find.genes){return(R)}
+  
   if(!is.null(param$specific.pair)){
     main<-paste(main,paste(param$specific.pair,collapse = "."),sep = "_")
     rA<-rA[param$specific.pair]
   }
-  R<-DIALOGUE2(rA = rA,main = main,results.dir = param$results.dir,parallel.vs = param$parallel.vs)
-  R<-DIALOGUE3(rA = rA,main = main,results.dir = param$results.dir,full.version = param$full.version,pheno = param$pheno)
+  
+  R<-DIALOGUE2(rA = rA,main = main,results.dir = param$results.dir)
+  R<-DIALOGUE3(rA = rA,main = main,results.dir = param$results.dir)
   if(plot.flag){
     DIALOGUE.plot(R,results.dir = param$results.dir,pheno = param$pheno)
   }
@@ -356,7 +360,7 @@ DIALOGUE1.PMD.pairwise<-function(X,k,specific.pair){
   return(out1)
 }
 
-DIALOGUE2<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",subsample.flag = T,parallel.vs = F){
+DIALOGUE2<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/"){
   print("#************DIALOGUE Step II: HLM ************#")
   cell.types<-names(rA)
   if(missing(main)){main<-paste0(cell.types,collapse = "_")}
@@ -384,7 +388,7 @@ DIALOGUE2<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",subsampl
     return(rslts)
   }
   
-  if(parallel.vs){
+  if(R$param$parallel.vs){
     R1<-mclapply(1:nrow(pairs1),f)
     names(R1)<-paste(pairs1[,1],pairs1[,2],sep = ".vs.")
     R<-c(R,R1)
@@ -479,7 +483,7 @@ DIALOGUE2.mixed.effects<-function(r1,x,sig2,frm = "y ~ (1 | samples) + x + cellQ
   return(P)
 }
 
-DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.version = F,pheno = NULL){
+DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/"){
   print("#************Finalizing the scores************#")
   cell.types<-names(rA)
   if(missing(main)){main<-paste0(cell.types,collapse = "_")}
@@ -529,17 +533,16 @@ DIALOGUE3<-function(rA,main,results.dir = "~/Desktop/DIALOGUE.results/",full.ver
   rownames(R$cca.fit)<-R$cell.types
   
   fileName<-paste0(results.dir,"DLG.full.output_",main,".rds")
-  if(full.version){saveRDS(R,file = fileName)}
   
-  if(!is.null(pheno)){R$phenoZ<-DIALOGUE.pheno(R,pheno = pheno)}
-  if(full.version){saveRDS(R,file = fileName)}
+  if(!is.null(R$param$pheno)){R$phenoZ<-DIALOGUE.pheno(R,pheno = R$param$pheno)}
+  if(R$param$full.version){saveRDS(R,file = fileName)}
   
   R1<-R[intersect(names(R),c("cell.types","scores","gene.pval","param","MCP.cell.types","MCPs","MCPs.full",
                              "emp.p","pref","k","name","phenoZ",results.dir))]
   fileName<-paste0(results.dir,"DLG.output_",main,".rds")
   saveRDS(R1,file = fileName)
   
-  if(!full.version){
+  if(!R$param$full.version){
     file.remove(paste0(results.dir,"DIALOGUE1_",main,".rds"))
     file.remove(paste0(results.dir,"DIALOGUE2_",main,".rds"))
     unlink(paste0(results.dir,"DIALOGUE2_",main,"/"),recursive = T)
