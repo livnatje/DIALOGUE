@@ -611,7 +611,7 @@ call.plot.plus<-function(x, y = NULL,labels,b.top,red.top = F,regression.flag = 
 #' @export
 call.plot<-function(x, y = NULL,labels,regression.flag = F,my.col = NULL,set.flag = F,cor.flag = F,legend.flag = T,
                     pch=16,cex=0.5,main="",ylab = "UMAP2",xlab = "UMAP1", cex.axis = 0.6,add.N = F,cex.main = 1,
-                    color.spec = "rgb"){
+                    color.spec = "hsv"){
   main<-capitalize(main)
   if(add.N&length(unique(labels))<30){
     labels<-add.n.of.samples(labels)
