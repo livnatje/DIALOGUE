@@ -1,6 +1,6 @@
 Package: DIALOGUE
 Title: DIALOGUE is a dimensionality reduction algorithm that uses cross-cell-type associations to identify multicellular programs and map the cell transcriptome as a function of its environment.
-Version: 1.0
+Version: 1.01
 Authors@R: 
     person(given = "Livnat",
            family = "Jerby-Arnon",
