@@ -113,6 +113,7 @@ get.top.elements<-function (m,q = 100,min.ci = NULL,main = ""){
     top.l[[i]]<-sort(v[b])
   }
   if(main!=""){main<-paste0(main,".")}
+  if(length(top.l)<1){return(top.l)}
   names(top.l)<-paste0(main,colnames(m))
   return(top.l)
 }
